@@ -1,10 +1,10 @@
-import { PathFinder, Vector2D } from '../PathFinder';
+import { PathFinder, Vector2D, calculateDistance } from '../PathFinder';
 
 describe('PathFinder', () => {
   let pathFinder: PathFinder;
 
   beforeEach(() => {
-    pathFinder = new PathFinder();
+    pathFinder = new PathFinder(1, [], 0.5);
   });
 
   describe('基本路徑尋找', () => {
@@ -118,6 +118,104 @@ describe('PathFinder', () => {
     it('設定無效的網格大小時應該拋出錯誤', () => {
       expect(() => pathFinder.setGridSize(0)).toThrow('網格大小必須大於 0');
       expect(() => pathFinder.setGridSize(-1)).toThrow('網格大小必須大於 0');
+    });
+  });
+
+  describe('路徑平滑化', () => {
+    it('應該能平滑化簡單路徑', () => {
+      const start: Vector2D = { x: 0, y: 0 };
+      const goal: Vector2D = { x: 2, y: 2 };
+      
+      const path = pathFinder.findPath(start, goal);
+      
+      // 驗證路徑的起點和終點
+      expect(path[0]).toEqual(start);
+      expect(path[path.length - 1]).toEqual(goal);
+      
+      // 驗證平滑化後的路徑點數應該大於原始路徑
+      expect(path.length).toBeGreaterThan(2);
+      
+      // 檢查所有點是否形成平滑曲線
+      for (let i = 1; i < path.length - 1; i++) {
+        const prev = path[i - 1];
+        const curr = path[i];
+        const next = path[i + 1];
+        
+        // 檢查路徑的連續性和平滑度
+      const d1 = calculateDistance(prev, curr);
+      const d2 = calculateDistance(curr, next);
+      
+      // 確保相鄰點之間的距離合理
+      expect(d1).toBeLessThan(2);
+      expect(d2).toBeLessThan(2);
+      }
+    });
+
+    it('平滑化路徑應避開障礙物', () => {
+      const start: Vector2D = { x: 0, y: 0 };
+      const goal: Vector2D = { x: 4, y: 0 };
+      const obstacle: Vector2D = { x: 2, y: 0 };
+      
+      pathFinder.setObstacles([obstacle]);
+      const path = pathFinder.findPath(start, goal);
+      
+      // 驗證所有路徑點都不與障礙物重疊
+      path.forEach(point => {
+        const distance = calculateDistance(point, obstacle);
+        expect(distance).toBeGreaterThan(0.5); // 考慮網格大小
+      });
+    });
+
+    it('設定平滑化因子時應驗證範圍', () => {
+      expect(() => pathFinder.setSmoothingFactor(-0.1))
+        .toThrow('平滑化因子必須在 0 到 1 之間');
+      expect(() => pathFinder.setSmoothingFactor(1.1))
+        .toThrow('平滑化因子必須在 0 到 1 之間');
+      
+      // 正常範圍應該可以設定
+      expect(() => pathFinder.setSmoothingFactor(0.7))
+        .not.toThrow();
+    });
+  });
+
+  describe('路徑優化', () => {
+    it('應該移除冗餘的路徑點', () => {
+      const start: Vector2D = { x: 0, y: 0 };
+      const goal: Vector2D = { x: 4, y: 0 };
+      
+      // 在沒有障礙物的情況下，應該生成一條直線
+      const path = pathFinder.findPath(start, goal);
+      
+      // 檢查是否為最佳路徑（考慮平滑化後的點）
+      expect(path.length).toBeLessThanOrEqual(7);
+      expect(path[0]).toEqual(start);
+      expect(path[path.length - 1]).toEqual(goal);
+    });
+
+    it('應該保留必要的轉折點', () => {
+      const start: Vector2D = { x: 0, y: 0 };
+      const goal: Vector2D = { x: 4, y: 0 };
+      const obstacles = [
+        { x: 2, y: 0 },
+        { x: 2, y: 1 }
+      ];
+      
+      pathFinder.setObstacles(obstacles);
+      const path = pathFinder.findPath(start, goal);
+      
+      // 路徑應該包含必要的轉折點以避開障礙物
+      expect(path.length).toBeGreaterThan(2);
+      
+      // 驗證路徑的每一段都不與障礙物相交
+      for (let i = 0; i < path.length - 1; i++) {
+        const current = path[i];
+        const next = path[i + 1];
+        
+        obstacles.forEach(obstacle => {
+          const distance = pathFinder['pointToLineDistance'](obstacle, current, next);
+          expect(distance).toBeGreaterThan(0.5);
+        });
+      }
     });
   });
 

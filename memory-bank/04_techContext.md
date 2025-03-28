@@ -121,7 +121,15 @@ class PathFinder {
   // 使用曼哈頓距離作為啟發函數
   // 支援動態障礙物處理
   // 可配置網格大小
+  // Catmull-Rom 曲線路徑平滑化
+  // 智能避障系統
+  // 路徑優化
 }
+
+// 路徑平滑化演算法
+- Catmull-Rom 曲線插值
+- 動態避障檢測
+- 路徑優化與簡化
 
 // 核心狀態介面
 interface GameState {
@@ -138,6 +146,12 @@ interface RootState {
   settings: SettingsState;
 }
 ```
+
+### 演算法效能優化
+- 路徑快取機制
+- 動態障礙物處理
+- 路徑平滑化優化
+- 避障計算優化
 
 ### API 設計原則
 - 組件化設計
