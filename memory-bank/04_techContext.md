@@ -14,7 +14,9 @@
 - **專案管理**: GitHub Projects
 - **文件管理**: Markdown
 - **建置工具**: Vite 5.4
-- **測試框架**: Cypress 13.6
+- **測試框架**:
+  - Jest 29.7 (單元測試)
+  - Cypress 13.6 (端到端測試)
 
 ### 第三方框架
 - **UI Framework**: Material-UI (MUI) 5.15
@@ -88,10 +90,15 @@
 - 單元測試覆蓋率 >80%
 
 ### 測試規範
-- 使用 Cypress 進行端到端測試
-- 自動化截圖測試
-- 狀態管理測試
-- Headless 測試支援
+- Jest 單元測試
+  - TypeScript 支援
+  - 狀態管理測試
+  - 組件測試
+  - 效能測試
+- Cypress 端到端測試
+  - 自動化截圖測試
+  - 狀態管理測試
+  - Headless 測試支援
 
 ### 資料結構
 ```typescript
