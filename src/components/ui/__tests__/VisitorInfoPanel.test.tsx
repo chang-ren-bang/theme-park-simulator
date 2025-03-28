@@ -23,7 +23,13 @@ describe('VisitorInfoPanel', () => {
     targetQueue: null,
     targetFacility: null,
     waitTime: 0,
-    playTime: 0
+    playTime: 0,
+    prediction: {
+      nextState: 'MOVING' as VisitorState,
+      nextPosition: { x: 15, y: 25 },
+      satisfactionTrend: -5,
+      timeToNextState: 3.5
+    }
   };
 
   const mockState = {
@@ -111,6 +117,86 @@ describe('VisitorInfoPanel', () => {
     expect(styleAttr).toContain('font-size: 24px');
     expect(styleAttr).toContain('animation: moodBounce');
     expect(styleAttr).toContain('text-align: center');
+  });
+
+  describe('預測資訊顯示', () => {
+    it('應該顯示預測資訊區塊', () => {
+      render(<VisitorInfoPanel />);
+      expect(screen.getByText('預測資訊')).toBeInTheDocument();
+    });
+
+    it('應該正確顯示下一個狀態', () => {
+      render(<VisitorInfoPanel />);
+      expect(screen.getByText('MOVING')).toBeInTheDocument();
+    });
+
+    it('應該顯示目標位置', () => {
+      render(<VisitorInfoPanel />);
+      expect(screen.getByText('目標位置: (15, 25)')).toBeInTheDocument();
+    });
+
+    it('應該顯示滿意度趨勢', () => {
+      render(<VisitorInfoPanel />);
+      const trendText = screen.getByText('↓5%');
+      expect(trendText).toBeInTheDocument();
+      expect(trendText.parentElement?.style.color).toBe('#F44336');
+    });
+
+    it('應該顯示正確的預計時間', () => {
+      render(<VisitorInfoPanel />);
+      expect(screen.getByText('預計時間: 3.5秒')).toBeInTheDocument();
+    });
+
+    it('應該在不同狀態下顯示不同的預測', () => {
+      // 測試遊玩狀態的預測
+      const playingState = {
+        visitors: {
+          selectedVisitorId: 'visitor1',
+          visitors: {
+            visitor1: {
+              ...mockVisitor,
+              state: 'PLAYING' as VisitorState,
+              prediction: {
+                nextState: 'IDLE' as VisitorState,
+                satisfactionTrend: 10,
+                timeToNextState: 2.0
+              }
+            }
+          }
+        }
+      };
+
+      mockUseAppSelector.mockImplementation((selector) => selector(playingState));
+      const { rerender } = render(<VisitorInfoPanel />);
+      
+      expect(screen.getByText('IDLE')).toBeInTheDocument();
+      expect(screen.getByText('↑10%')).toBeInTheDocument();
+      
+      // 清理並測試排隊狀態的預測
+      rerender(<></>);
+      const queuingState = {
+        visitors: {
+          selectedVisitorId: 'visitor1',
+          visitors: {
+            visitor1: {
+              ...mockVisitor,
+              state: 'QUEUING' as VisitorState,
+              prediction: {
+                nextState: 'PLAYING' as VisitorState,
+                satisfactionTrend: -15,
+                timeToNextState: 5.0
+              }
+            }
+          }
+        }
+      };
+
+      mockUseAppSelector.mockImplementation((selector) => selector(queuingState));
+      render(<VisitorInfoPanel />);
+      
+      expect(screen.getByText('PLAYING')).toBeInTheDocument();
+      expect(screen.getByText('↓15%')).toBeInTheDocument();
+    });
   });
 
   it('當 lowSatisfactionCount > 0 時應該顯示警告', () => {

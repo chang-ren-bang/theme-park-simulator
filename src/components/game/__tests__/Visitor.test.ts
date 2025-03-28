@@ -1,6 +1,5 @@
 import { Visitor, VisitorState } from '../Visitor';
 import { Vector2D } from '../../../utils/PathFinder';
-import { MapBoundary } from '../types/MapConfig';
 
 describe('Visitor', () => {
   const testId = 'testVisitor';
@@ -88,6 +87,57 @@ describe('Visitor', () => {
       // 移動然後嘗試更新
       visitor.update(1);
       expect(visitor.position).not.toEqual(initialPosition);
+    });
+  });
+
+  describe('行為預測', () => {
+    it('應該在閒置狀態下提供正確的預測', () => {
+      // 先降低滿意度使遊客需要尋找新設施
+      visitor.startQueuing(180); // 3分鐘等待
+      visitor.update(1);
+      
+      expect(visitor.prediction).toBeDefined();
+      expect(visitor.prediction?.nextState).toBe(VisitorState.MOVING);
+      expect(visitor.prediction?.satisfactionTrend).toBeLessThan(0);
+    });
+
+    it('應該在移動狀態下提供位置預測', () => {
+      const target: Vector2D = { x: 5, y: 5 };
+      visitor.moveTo(target);
+      
+      expect(visitor.prediction).toBeDefined();
+      expect(visitor.prediction?.nextPosition).toBeDefined();
+      expect(visitor.prediction?.timeToNextState).toBeGreaterThan(0);
+    });
+
+    it('應該在排隊狀態下預測遊玩狀態', () => {
+      visitor.startQueuing(60);
+      visitor.update(1);
+      
+      expect(visitor.prediction).toBeDefined();
+      expect(visitor.prediction?.nextState).toBe(VisitorState.PLAYING);
+      expect(visitor.prediction?.satisfactionTrend).toBeLessThan(0);
+    });
+
+    it('應該在遊玩狀態下預測滿意度上升', () => {
+      visitor.startPlaying();
+      visitor.update(1);
+      
+      expect(visitor.prediction).toBeDefined();
+      expect(visitor.prediction?.nextState).toBe(VisitorState.IDLE);
+      expect(visitor.prediction?.satisfactionTrend).toBeGreaterThan(0);
+    });
+
+    it('應該在離開狀態下預測滿意度持續下降', () => {
+      // 強制進入離開狀態
+      for (let i = 0; i < 3; i++) {
+        visitor.startQueuing(300);
+        visitor.update(1);
+      }
+      
+      expect(visitor.prediction).toBeDefined();
+      expect(visitor.state).toBe(VisitorState.LEAVING);
+      expect(visitor.prediction?.satisfactionTrend).toBeLessThan(0);
     });
   });
 });

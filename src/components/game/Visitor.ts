@@ -20,6 +20,12 @@ export interface IVisitor {
   position: Vector2D;     // 當前位置
   state: VisitorState;    // 當前狀態
   satisfaction: number;   // 當前滿意度
+  prediction?: {
+    nextState: VisitorState;      // 預測的下一個狀態
+    nextPosition?: Vector2D;      // 預測的下一個位置
+    satisfactionTrend: number;    // 預測的滿意度趨勢（正數表示上升，負數表示下降）
+    timeToNextState: number;      // 預測到達下一個狀態的時間（秒）
+  };
 }
 
 /**
@@ -30,11 +36,18 @@ export class Visitor implements IVisitor {
   public readonly id: string;
   public position: Vector2D;
   public state: VisitorState;
+  public prediction?: {
+    nextState: VisitorState;
+    nextPosition?: Vector2D;
+    satisfactionTrend: number;
+    timeToNextState: number;
+  };
   
   private pathFinder: PathFinder;
   private satisfactionManager: SatisfactionManager;
   private currentPath: Vector2D[];
   private lowSatisfactionCount: number;
+  private lastUpdateTime: number;
   private static readonly SATISFACTION_THRESHOLD = 50;
   private static readonly MAX_LOW_SATISFACTION_COUNT = 3;
 
@@ -43,6 +56,7 @@ export class Visitor implements IVisitor {
     initialPosition: Vector2D,
     obstacles: Vector2D[] = []
   ) {
+    this.lastUpdateTime = Date.now();
     this.id = id;
     // 確保初始位置為整數
     this.position = {
@@ -128,6 +142,7 @@ export class Visitor implements IVisitor {
    * @returns 返回是否需要離開遊樂園
    */
   public update(deltaTime: number): boolean {
+    this.updatePrediction();
     // 處理移動狀態
     if (this.state === VisitorState.MOVING && this.currentPath.length > 0) {
       const nextPosition = this.currentPath[0];
@@ -230,5 +245,67 @@ export class Visitor implements IVisitor {
    */
   public needsNewAttraction(): boolean {
     return this.satisfaction < Visitor.SATISFACTION_THRESHOLD;
+  }
+
+  /**
+   * 更新預測資訊
+   */
+  private updatePrediction(): void {
+    const currentTime = Date.now();
+    const timeSinceLastUpdate = (currentTime - this.lastUpdateTime) / 1000; // 轉換為秒
+    
+    let nextState = this.state;
+    let nextPosition = undefined;
+    let satisfactionTrend = 0;
+    let timeToNextState = 0;
+
+    switch (this.state) {
+      case VisitorState.IDLE:
+        // 閒置狀態可能會轉向移動或離開
+        if (this.needsNewAttraction()) {
+          nextState = VisitorState.MOVING;
+          timeToNextState = 1; // 預計1秒後開始移動
+          satisfactionTrend = -5; // 預計持續下降
+        }
+        break;
+
+      case VisitorState.MOVING:
+        if (this.currentPath.length > 0) {
+          nextPosition = this.currentPath[0];
+          const distance = Math.sqrt(
+            Math.pow(nextPosition.x - this.position.x, 2) +
+            Math.pow(nextPosition.y - this.position.y, 2)
+          );
+          timeToNextState = distance / 4; // 以移動速度4計算到達時間
+          satisfactionTrend = -2; // 移動過程緩慢下降
+        }
+        break;
+
+      case VisitorState.QUEUING:
+        nextState = VisitorState.PLAYING;
+        timeToNextState = 5; // 預計5秒後開始遊玩
+        satisfactionTrend = -15; // 排隊期間快速下降
+        break;
+
+      case VisitorState.PLAYING:
+        nextState = VisitorState.IDLE;
+        timeToNextState = 3; // 預計3秒後結束遊玩
+        satisfactionTrend = 10; // 遊玩期間上升
+        break;
+
+      case VisitorState.LEAVING:
+        satisfactionTrend = -10; // 離開時快速下降
+        break;
+    }
+
+    // 更新預測資訊
+    this.prediction = {
+      nextState,
+      nextPosition,
+      satisfactionTrend,
+      timeToNextState: Math.max(0, timeToNextState - timeSinceLastUpdate)
+    };
+
+    this.lastUpdateTime = currentTime;
   }
 }

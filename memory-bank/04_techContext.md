@@ -105,6 +105,11 @@
     - screen.getByText 與正則表達式支援
     - style 屬性測試支援
     - 動態樣式與動畫測試
+    - 行為預測系統測試
+      - 狀態預測測試
+      - 滿意度趨勢測試
+      - 時間預估測試
+      - 位置預測測試
   - 自定義 TypeScript 配置 (tsconfig.test.json)
     - 支援 JSX
     - ESModule 相容性
@@ -113,6 +118,7 @@
     - useSelector hook 模擬
     - 狀態變更測試
     - 複雜狀態樹測試
+    - 預測資訊狀態測試
 - Cypress 端到端測試
   - 自動化截圖測試
   - 狀態管理測試
@@ -132,6 +138,14 @@ interface PathNode {
   h: number;  // 預估此節點到終點的成本
   f: number;  // 總成本 (g + h)
   parent: PathNode | null;
+}
+
+// 預測系統介面
+interface Prediction {
+  nextState: VisitorState;
+  nextPosition?: Vector2D;
+  satisfactionTrend: number;
+  timeToNextState: number;
 }
 
 // A* 演算法實現
@@ -170,12 +184,20 @@ interface RootState {
 - 動態障礙物處理
 - 路徑平滑化優化
 - 避障計算優化
+- 預測系統優化
+  - 狀態轉換計算優化
+  - 時間預估精確度提升
+  - 趨勢計算效能優化
 
 ### API 設計原則
 - 組件化設計
 - Props 類型定義
 - 狀態隔離
 - 效能監控
+- 預測系統設計
+  - 狀態預測介面
+  - 趨勢分析介面
+  - 時間估算介面
 
 ## 前端架構
 
@@ -199,6 +221,8 @@ interface RootState {
 - 錯誤追蹤
 - 使用者行為
 - 測試覆蓋率
+- 預測準確度監控
+- 預測系統效能監控
 
 ### 維護計畫
 - 定期更新依賴
@@ -206,3 +230,4 @@ interface RootState {
 - 效能調校
 - 功能擴展
 - 自動化測試維護
+- 預測系統調校與優化

@@ -154,6 +154,49 @@ const VisitorInfoPanel: React.FC = () => {
           ⚠️ 連續低滿意度次數: {visitor.lowSatisfactionCount}
         </div>
       )}
+
+      {visitor.prediction && (
+        <div style={{
+          marginTop: '15px',
+          padding: '10px',
+          backgroundColor: 'rgba(0, 0, 0, 0.05)',
+          borderRadius: '4px'
+        }}>
+          <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>
+            預測資訊
+          </div>
+          
+          <div style={{ fontSize: '0.9em' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+              <span>下一個狀態:</span>
+              <span style={{ color: statusColors[visitor.prediction.nextState] }}>
+                {visitor.prediction.nextState}
+              </span>
+            </div>
+
+            {visitor.prediction.nextPosition && (
+              <div style={{ marginBottom: '4px' }}>
+                目標位置: ({visitor.prediction.nextPosition.x}, {visitor.prediction.nextPosition.y})
+              </div>
+            )}
+
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
+              <span>滿意度趨勢:</span>
+              <span style={{
+                marginLeft: '8px',
+                color: visitor.prediction.satisfactionTrend > 0 ? '#4CAF50' : '#F44336'
+              }}>
+                {visitor.prediction.satisfactionTrend > 0 ? '↑' : '↓'}
+                {Math.abs(visitor.prediction.satisfactionTrend)}%
+              </span>
+            </div>
+
+            <div>
+              預計時間: {visitor.prediction.timeToNextState.toFixed(1)}秒
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

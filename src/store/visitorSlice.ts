@@ -2,12 +2,20 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Vector2D } from '../utils/PathFinder';
 import { VisitorState } from '../components/game/Visitor';
 
+interface VisitorPrediction {
+  nextState: VisitorState;
+  nextPosition?: Vector2D;
+  satisfactionTrend: number;
+  timeToNextState: number;
+}
+
 interface VisitorInfo {
   id: string;
   position: Vector2D;
   state: VisitorState;
   satisfaction: number;
   lowSatisfactionCount: number;
+  prediction?: VisitorPrediction;
 }
 
 interface VisitorsState {
