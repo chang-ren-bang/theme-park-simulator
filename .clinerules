@@ -1,0 +1,20 @@
+# Project Intelligence Rules
+
+## Learned Patterns
+1. **Simulation Engine**: Use discrete event simulation for ride operations
+2. **UI Design**: Prioritize Material-UI for consistent and accessible interfaces
+3. **API Development**: Implement RESTful APIs with JSON payloads
+
+## User Preferences
+- Developer prefers TypeScript for type safety
+- Real-time data visualization is critical
+- Scalability must be considered from the start
+
+## Technical Notes
+- Use MongoDB for persistence
+- Implement caching mechanisms for performance
+- Monitor memory usage for in-memory databases
+
+## Known Challenges
+- Handling large datasets for park simulations
+- Ensuring low-latency communication between services
