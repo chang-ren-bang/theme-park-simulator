@@ -1,20 +1,134 @@
-# Project Intelligence Rules
+# Theme Park Simulator 專案規則與學習
 
-## Learned Patterns
-1. **Simulation Engine**: Use discrete event simulation for ride operations
-2. **UI Design**: Prioritize Material-UI for consistent and accessible interfaces
-3. **API Development**: Implement RESTful APIs with JSON payloads
+## 檔案結構慣例
 
-## User Preferences
-- Developer prefers TypeScript for type safety
-- Real-time data visualization is critical
-- Scalability must be considered from the start
+### 目錄組織
+```
+theme-park-simulator/
+├── src/
+│   ├── components/     # React 組件
+│   │   ├── ui/        # UI 組件
+│   │   ├── game/      # 遊戲組件
+│   │   └── shared/    # 共用組件
+│   ├── store/         # Redux 狀態管理
+│   ├── hooks/         # 自定義 Hooks
+│   ├── utils/         # 工具函數
+│   └── engine/        # Canvas 引擎
+├── public/            # 靜態資源
+├── tests/            # 測試文件
+└── memory-bank/      # 專案記憶庫
+```
 
-## Technical Notes
-- Use MongoDB for persistence
-- Implement caching mechanisms for performance
-- Monitor memory usage for in-memory databases
+## 開發規範
 
-## Known Challenges
-- Handling large datasets for park simulations
-- Ensuring low-latency communication between services
+### 命名慣例
+- 組件名稱: PascalCase (例: GameCanvas)
+- Hook 名稱: use開頭 (例: useGameLoop)
+- 函數名稱: camelCase (例: updateGameState)
+- 常量名稱: UPPER_CASE (例: MAX_PLAYERS)
+- 文件名稱: kebab-case (例: game-canvas.tsx)
+
+### React 相關規範
+1. 使用函數式組件
+2. 使用 TypeScript 定義類型
+3. 使用 ESLint + Prettier 格式化
+4. 遵循 React Hooks 規則
+
+## 狀態管理規範
+
+### Redux 使用準則
+1. 使用 Redux Toolkit
+2. 按功能拆分 Slice
+3. 使用 TypeScript 類型
+4. 實作 Selector 優化
+
+### 本地狀態管理
+1. 適當使用 useState
+2. 合理使用 useReducer
+3. 使用 Context API
+4. 注意性能優化
+
+## Canvas 開發規範
+
+### 渲染優化
+1. 使用 requestAnimationFrame
+2. 實現離屏渲染
+3. 使用物件池
+4. 優化更新頻率
+
+### 遊戲迴圈
+```typescript
+// 遊戲迴圈示例
+const gameLoop = (timestamp: number) => {
+  const deltaTime = timestamp - lastTimestamp;
+  update(deltaTime);
+  render();
+  requestAnimationFrame(gameLoop);
+};
+```
+
+## 組件開發範例
+
+### UI 組件
+```typescript
+// UI 組件範例
+const ControlPanel: React.FC<ControlPanelProps> = (props) => {
+  // 組件邏輯
+  return (
+    <div className="control-panel">
+      {/* UI 結構 */}
+    </div>
+  );
+};
+```
+
+### 遊戲組件
+```typescript
+// 遊戲組件範例
+const GameCanvas: React.FC = () => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  
+  useEffect(() => {
+    // Canvas 初始化
+  }, []);
+
+  return <canvas ref={canvasRef} />;
+};
+```
+
+## 最佳實踐
+
+### 效能優化
+1. 使用 React.memo 優化渲染
+2. 實現虛擬列表
+3. 使用 Web Workers
+4. 優化 Redux 選擇器
+
+### 代碼質量
+1. 單元測試覆蓋
+2. 組件測試
+3. E2E 測試
+4. 效能測試
+
+## 版本控制
+
+### 分支管理
+1. main: 穩定版本
+2. develop: 開發版本
+3. feature/*: 功能分支
+4. hotfix/*: 緊急修復
+
+### 提交規範
+- feat: 新功能
+- fix: 錯誤修復
+- docs: 文檔更新
+- style: 代碼格式
+- refactor: 重構
+- test: 測試相關
+- chore: 構建/工具
+
+## 注意事項
+1. 定期檢查性能
+2. 保持代碼簡潔
+3. 編寫單元測試
+4. 更新技術文檔
