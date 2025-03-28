@@ -100,8 +100,29 @@
   - 狀態管理測試
   - Headless 測試支援
 
-### 資料結構
+### 資料結構與演算法
 ```typescript
+// 路徑尋找演算法
+interface Vector2D {
+  x: number;
+  y: number;
+}
+
+interface PathNode {
+  position: Vector2D;
+  g: number;  // 起點到此節點的成本
+  h: number;  // 預估此節點到終點的成本
+  f: number;  // 總成本 (g + h)
+  parent: PathNode | null;
+}
+
+// A* 演算法實現
+class PathFinder {
+  // 使用曼哈頓距離作為啟發函數
+  // 支援動態障礙物處理
+  // 可配置網格大小
+}
+
 // 核心狀態介面
 interface GameState {
   economy: Economy;
