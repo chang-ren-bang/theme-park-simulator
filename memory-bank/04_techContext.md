@@ -16,6 +16,7 @@
 - **建置工具**: Vite 5.4
 - **測試框架**:
   - Jest 29.7 (單元測試)
+  - Testing Library (@testing-library/react, @testing-library/jest-dom)
   - Cypress 13.6 (端到端測試)
 
 ### 第三方框架
@@ -53,6 +54,9 @@
     "react-redux": "^9.1.0"
   },
   "devDependencies": {
+    "@testing-library/react": "^14.2.1",
+    "@testing-library/jest-dom": "^6.4.2",
+    "@types/testing-library__jest-dom": "^5.14.9",
     "@testing-library/cypress": "^10.0.1",
     "cypress": "^13.6.6",
     "typescript": "^5.2.2",
@@ -95,6 +99,13 @@
   - 狀態管理測試
   - 組件測試
   - 效能測試
+  - Testing Library 整合
+    - @testing-library/react 用於組件測試
+    - @testing-library/jest-dom 用於 DOM 斷言
+  - 自定義 TypeScript 配置 (tsconfig.test.json)
+    - 支援 JSX
+    - ESModule 相容性
+    - Jest 類型定義
 - Cypress 端到端測試
   - 自動化截圖測試
   - 狀態管理測試

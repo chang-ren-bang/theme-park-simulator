@@ -1,35 +1,48 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useCallback } from 'react';
+import { useAppDispatch } from './hooks/useAppDispatch';
+import { updateVisitor, selectVisitor } from './store/visitorSlice';
+import VisitorInfoPanel from './components/ui/VisitorInfoPanel';
+import './App.css';
+import { Vector2D } from './utils/PathFinder';
+import { VisitorState } from './components/game/Visitor';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const dispatch = useAppDispatch();
+
+  // 模擬選擇遊客的函數
+  const simulateVisitorSelection = useCallback(() => {
+    // 創建一個模擬的遊客資料
+    const mockVisitor = {
+      id: 'VISITOR_001',
+      position: { x: 10, y: 20 } as Vector2D,
+      state: VisitorState.MOVING,
+      satisfaction: 75,
+      lowSatisfactionCount: 1
+    };
+
+    // 更新遊客資料並選擇該遊客
+    dispatch(updateVisitor(mockVisitor));
+    dispatch(selectVisitor(mockVisitor.id));
+  }, [dispatch]);
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="app">
+      <button 
+        onClick={simulateVisitorSelection}
+        style={{
+          position: 'fixed',
+          top: '20px',
+          left: '20px',
+          padding: '10px 20px',
+          fontSize: '16px',
+          cursor: 'pointer'
+        }}
+      >
+        模擬選擇遊客
+      </button>
+      <VisitorInfoPanel />
+    </div>
+  );
 }
 
-export default App
+export default App;
