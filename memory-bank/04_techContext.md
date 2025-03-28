@@ -102,10 +102,17 @@
   - Testing Library 整合
     - @testing-library/react 用於組件測試
     - @testing-library/jest-dom 用於 DOM 斷言
+    - screen.getByText 與正則表達式支援
+    - style 屬性測試支援
+    - 動態樣式與動畫測試
   - 自定義 TypeScript 配置 (tsconfig.test.json)
     - 支援 JSX
     - ESModule 相容性
     - Jest 類型定義
+  - Redux Mock 支援
+    - useSelector hook 模擬
+    - 狀態變更測試
+    - 複雜狀態樹測試
 - Cypress 端到端測試
   - 自動化截圖測試
   - 狀態管理測試

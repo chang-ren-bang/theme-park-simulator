@@ -2,6 +2,15 @@ import React from 'react';
 import { useAppSelector } from '../../hooks/useAppSelector';
 import { VisitorState } from '../game/Visitor';
 
+// 遊客情緒對應的表情符號
+const moodEmojis = {
+  veryHappy: '😄',
+  happy: '🙂',
+  neutral: '😐',
+  unhappy: '🙁',
+  veryUnhappy: '😫',
+};
+
 // 遊客狀態對應的顏色
 const statusColors: Record<VisitorState, string> = {
   'IDLE': '#808080',     // 灰色
@@ -9,6 +18,39 @@ const statusColors: Record<VisitorState, string> = {
   'QUEUING': '#FFC107',  // 黃色
   'PLAYING': '#2196F3',  // 藍色
   'LEAVING': '#F44336',  // 紅色
+};
+
+interface MoodIndicatorProps {
+  satisfaction: number;
+  state: VisitorState;
+}
+
+const MoodIndicator: React.FC<MoodIndicatorProps> = ({ satisfaction, state }) => {
+  // 根據滿意度和狀態計算情緒
+  const getMoodEmoji = (satisfaction: number, state: VisitorState): string => {
+    // 如果正在離開，一律顯示不開心
+    if (state === 'LEAVING') return moodEmojis.veryUnhappy;
+    
+    // 根據滿意度決定表情
+    if (satisfaction >= 90) return moodEmojis.veryHappy;
+    if (satisfaction >= 70) return moodEmojis.happy;
+    if (satisfaction >= 50) return moodEmojis.neutral;
+    if (satisfaction >= 30) return moodEmojis.unhappy;
+    return moodEmojis.veryUnhappy;
+  };
+
+  const emoji = getMoodEmoji(satisfaction, state);
+
+  return (
+    <div className="mood-container" style={{ 
+      fontSize: '24px',
+      animation: 'moodBounce 0.3s ease',
+      marginBottom: '10px',
+      textAlign: 'center'
+    }}>
+      <div className="mood-emoji">{emoji}</div>
+    </div>
+  );
 };
 
 const VisitorInfoPanel: React.FC = () => {
@@ -71,10 +113,22 @@ const VisitorInfoPanel: React.FC = () => {
 
   return (
     <div style={panelStyle}>
+      <style>
+        {`
+          @keyframes moodBounce {
+            0% { transform: scale(0.8); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+          }
+        `}
+      </style>
+      
       <div style={headerStyle}>
         <div style={statusIndicatorStyle} />
         <h3 style={{ margin: 0 }}>遊客 {visitor.id}</h3>
       </div>
+
+      <MoodIndicator satisfaction={visitor.satisfaction} state={visitor.state} />
 
       <div style={{ marginBottom: '10px' }}>
         <div>狀態: {visitor.state}</div>
