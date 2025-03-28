@@ -1,0 +1,396 @@
+import { Visitor, VisitorState } from '../Visitor';
+import { Vector2D } from '../../../utils/PathFinder';
+
+describe('Visitor', () => {
+  // Test constants
+  const visitorId = 'visitor-1';
+  const initialPosition: Vector2D = { x: 0, y: 0 };
+  const obstacles: Vector2D[] = [{ x: 2, y: 2 }];
+
+  // Test basic visitor creation
+  test('should initialize a visitor correctly', () => {
+    const visitor = new Visitor(visitorId, initialPosition, obstacles);
+    
+    expect(visitor.id).toBe(visitorId);
+    expect(visitor.position).toEqual(initialPosition);
+    expect(visitor.state).toBe(VisitorState.IDLE);
+    expect(visitor.satisfaction).toBe(100);
+  });
+
+  // Test movement
+  test('should update position when moving towards a target', () => {
+    const visitor = new Visitor(visitorId, initialPosition, obstacles);
+    const target: Vector2D = { x: 5, y: 5 };
+    
+    visitor.moveTo(target);
+    expect(visitor.state).toBe(VisitorState.MOVING);
+    
+    // Update the visitor to move along the path
+    visitor.update(1); // 1 second update
+    
+    // Position should have changed from initial position
+    expect(visitor.position).not.toEqual(initialPosition);
+  });
+
+  // Test queueing
+  test('should update satisfaction when queuing', () => {
+    const visitor = new Visitor(visitorId, initialPosition);
+    const initialSatisfaction = visitor.satisfaction;
+    const waitingTime = 60; // 1 minute wait
+    
+    visitor.startQueuing(waitingTime);
+    expect(visitor.state).toBe(VisitorState.QUEUING);
+    expect(visitor.satisfaction).toBeLessThan(initialSatisfaction);
+  });
+
+  // Test playing
+  test('should boost satisfaction after playing', () => {
+    const visitor = new Visitor(visitorId, initialPosition);
+    
+    // First reduce satisfaction by queueing
+    visitor.startQueuing(120); // 2 minutes wait
+    const satisfactionAfterQueuing = visitor.satisfaction;
+    
+    // Start and finish playing
+    visitor.startPlaying();
+    expect(visitor.state).toBe(VisitorState.PLAYING);
+    
+    visitor.finishPlaying();
+    expect(visitor.state).toBe(VisitorState.IDLE);
+    expect(visitor.satisfaction).toBeGreaterThan(satisfactionAfterQueuing);
+  });
+
+  // Test obstacle updates
+  test('should update obstacles', () => {
+    const visitor = new Visitor(visitorId, initialPosition, []);
+    const newObstacles: Vector2D[] = [{ x: 3, y: 3 }, { x: 4, y: 4 }];
+    
+    visitor.updateObstacles(newObstacles);
+    // The test passes if no errors are thrown
+  });
+
+  // Test leaving condition
+  test('should set to leaving state after consecutive low satisfaction', () => {
+    const visitor = new Visitor(visitorId, initialPosition);
+    
+    // Reduce satisfaction severely by queueing multiple times
+    visitor.startQueuing(300); // 5 minutes wait - should cause significant drop
+    visitor.update(1);
+    visitor.startQueuing(300); // Another 5 minutes
+    visitor.update(1);
+    visitor.startQueuing(300); // And another 5 minutes
+    
+    // The third update should trigger the leaving state
+    const shouldLeave = visitor.update(1);
+    
+    expect(shouldLeave).toBe(true);
+    expect(visitor.state).toBe(VisitorState.LEAVING);
+  });
+});import { Visitor, VisitorState } from '../Visitor';
+import { Vector2D } from '../../../utils/PathFinder';
+
+describe('Visitor', () => {
+  // Test constants
+  const visitorId = 'visitor-1';
+  const initialPosition: Vector2D = { x: 0, y: 0 };
+  const obstacles: Vector2D[] = [{ x: 2, y: 2 }];
+
+  // Test basic visitor creation
+  test('should initialize a visitor correctly', () => {
+    const visitor = new Visitor(visitorId, initialPosition, obstacles);
+    
+    expect(visitor.id).toBe(visitorId);
+    expect(visitor.position).toEqual(initialPosition);
+    expect(visitor.state).toBe(VisitorState.IDLE);
+    expect(visitor.satisfaction).toBe(100);
+  });
+
+  // Test movement
+  test('should update position when moving towards a target', () => {
+    const visitor = new Visitor(visitorId, initialPosition, obstacles);
+    const target: Vector2D = { x: 5, y: 5 };
+    
+    visitor.moveTo(target);
+    expect(visitor.state).toBe(VisitorState.MOVING);
+    
+    // Update the visitor to move along the path
+    visitor.update(1); // 1 second update
+    
+    // Position should have changed from initial position
+    expect(visitor.position).not.toEqual(initialPosition);
+  });
+
+  // Test queueing
+  test('should update satisfaction when queuing', () => {
+    const visitor = new Visitor(visitorId, initialPosition);
+    const initialSatisfaction = visitor.satisfaction;
+    const waitingTime = 60; // 1 minute wait
+    
+    visitor.startQueuing(waitingTime);
+    expect(visitor.state).toBe(VisitorState.QUEUING);
+    expect(visitor.satisfaction).toBeLessThan(initialSatisfaction);
+  });
+
+  // Test playing
+  test('should boost satisfaction after playing', () => {
+    const visitor = new Visitor(visitorId, initialPosition);
+    
+    // First reduce satisfaction by queueing
+    visitor.startQueuing(120); // 2 minutes wait
+    const satisfactionAfterQueuing = visitor.satisfaction;
+    
+    // Start and finish playing
+    visitor.startPlaying();
+    expect(visitor.state).toBe(VisitorState.PLAYING);
+    
+    visitor.finishPlaying();
+    expect(visitor.state).toBe(VisitorState.IDLE);
+    expect(visitor.satisfaction).toBeGreaterThan(satisfactionAfterQueuing);
+  });
+
+  // Test obstacle updates
+  test('should update obstacles', () => {
+    const visitor = new Visitor(visitorId, initialPosition, []);
+    const newObstacles: Vector2D[] = [{ x: 3, y: 3 }, { x: 4, y: 4 }];
+    
+    visitor.updateObstacles(newObstacles);
+    // The test passes if no errors are thrown
+  });
+
+  // Test leaving condition
+  test('should set to leaving state after consecutive low satisfaction', () => {
+    const visitor = new Visitor(visitorId, initialPosition);
+    
+    // Reduce satisfaction severely by queueing multiple times
+    visitor.startQueuing(300); // 5 minutes wait - should cause significant drop
+    visitor.update(1);
+    visitor.startQueuing(300); // Another 5 minutes
+    visitor.update(1);
+    visitor.startQueuing(300); // And another 5 minutes
+    
+    // The third update should trigger the leaving state
+    const shouldLeave = visitor.update(1);
+    
+    expect(shouldLeave).toBe(true);
+    expect(visitor.state).toBe(VisitorState.LEAVING);
+  });
+});import { Visitor, VisitorState } from '../Visitor';import { Visitor, VisitorState } from '../Visitor';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+});  });    });      expect(visitor.state).toBe(VisitorState.MOVING);      // 應該進入移動狀態            visitor.moveTo(validTarget);      const validTarget: Vector2D = { x: 5, y: 5 };      // 嘗試移動到地圖內有效位置            expect(visitor.state).toBe(VisitorState.IDLE);      expect(visitor.position).toEqual(initialPosition);      // 應該保持原位且維持閒置狀態            visitor.moveTo(outOfBoundsTarget);      const outOfBoundsTarget: Vector2D = { x: 15, y: 15 };      // 嘗試移動到地圖外            }        return;        console.warn('未實現 updateMapBoundary 方法，此測試將被忽略');      } else {        (visitor as any).updateMapBoundary(mapBoundary);      if ('updateMapBoundary' in visitor) {      // 若此方法不存在，需要修改 Visitor 類別以添加此功能      // 手動設置邊界（假設 Visitor 類別有 updateMapBoundary 方法）            visitor = new Visitor(testId, initialPosition, []);      // 使用現有的建構函式參數            };        maxY: 10        minY: -10,        maxX: 10,        minX: -10,      const mapBoundary = {      // 這裡定義邊界但暫時不傳給構造函式    it('應該正確處理地圖邊界限制', () => {  describe('邊界情況', () => {  });    visitor = new Visitor(testId, initialPosition, []);  beforeEach(() => {  const initialPosition: Vector2D = { x: 0, y: 0 };  const testId = 'testVisitor';  let visitor: Visitor;describe('Visitor', () => {import { Vector2D } from '../types';import { Vector2D } from '../../../utils/PathFinder';
+
+describe('Visitor', () => {
+  let visitor: Visitor;
+  const initialPosition: Vector2D = { x: 0, y: 0 };
+  const testId = 'test-visitor-1';
+
+  beforeEach(() => {
+    visitor = new Visitor(testId, initialPosition);
+  });
+
+  describe('基本狀態', () => {
+    it('應該正確初始化遊客', () => {
+      expect(visitor.id).toBe(testId);
+      expect(visitor.position).toEqual(initialPosition);
+      expect(visitor.state).toBe(VisitorState.IDLE);
+      expect(visitor.satisfaction).toBe(100);
+    });
+
+    it('應該可以更新障礙物', () => {
+      const obstacles: Vector2D[] = [{ x: 1, y: 1 }];
+      expect(() => visitor.updateObstacles(obstacles)).not.toThrow();
+    });
+  });
+
+  describe('移動功能', () => {
+    it('應該正確設置移動狀態', () => {
+      const target: Vector2D = { x: 5, y: 5 };
+      visitor.moveTo(target);
+      expect(visitor.state).toBe(VisitorState.MOVING);
+    });
+
+    it('應該正確更新位置', () => {
+      // 清除所有障礙物
+      visitor.updateObstacles([]);
+      
+      // 設定簡單的移動目標
+      const target: Vector2D = { x: 1, y: 0 };
+      visitor.moveTo(target);
+      
+      // 確認進入移動狀態
+      expect(visitor.state).toBe(VisitorState.MOVING);
+      
+      // 模擬半秒移動（速度為2單位/秒，應該移動1單位）
+      visitor.update(0.5);
+      
+      // 檢查是否已經移動（任何大於0的距離）
+      const moved = visitor.position.x > 0;
+      expect(moved).toBe(true);
+      
+      // 確認y軸位置未變
+      expect(visitor.position.y).toBe(0);
+      
+      // 確認未超過目標
+      expect(visitor.position.x).toBeLessThanOrEqual(target.x);
+    });
+  });
+
+  describe('滿意度管理', () => {
+    it('應該正確處理排隊等待', () => {
+      const initialSatisfaction = visitor.satisfaction;
+      visitor.startQueuing(120); // 等待 2 分鐘
+      
+      expect(visitor.state).toBe(VisitorState.QUEUING);
+      expect(visitor.satisfaction).toBeLessThan(initialSatisfaction);
+    });
+
+    it('應該在完成遊玩後提升滿意度', () => {
+      // 先降低滿意度
+      visitor.startQueuing(240); // 等待4分鐘，降低滿意度
+      const initialSatisfaction = visitor.satisfaction;
+      
+      visitor.startPlaying();
+      expect(visitor.state).toBe(VisitorState.PLAYING);
+      
+      visitor.finishPlaying();
+      expect(visitor.state).toBe(VisitorState.IDLE);
+      expect(visitor.satisfaction).toBeGreaterThan(initialSatisfaction);
+    });
+
+    it('應該在連續低滿意度後準備離開', () => {
+      // 模擬三次低滿意度情況
+      for (let i = 0; i < 3; i++) {
+        visitor.startQueuing(360); // 等待 6 分鐘，大幅降低滿意度
+        visitor.update(0); // 觸發狀態更新
+      }
+      
+      expect(visitor.state).toBe(VisitorState.LEAVING);
+    });
+  });
+
+  describe('決策邏輯', () => {
+    it('應該在滿意度低時尋找新設施', () => {
+      // 降低滿意度
+      visitor.startQueuing(240); // 等待 4 分鐘
+      
+      expect(visitor.needsNewAttraction()).toBe(true);
+    });
+
+    it('在滿意度正常時不應尋找新設施', () => {
+      expect(visitor.needsNewAttraction()).toBe(false);
+    });
+  });
+
+  describe('邊界情況', () => {
+    it('應該正確處理無法到達的目標', () => {
+      // 使用障礙物將目標位置完全包圍
+      const obstacles: Vector2D[] = [
+        { x: 1, y: 0 }, { x: 1, y: 1 }, { x: 1, y: -1 },
+        { x: 2, y: 0 }, { x: 2, y: 1 }, { x: 2, y: -1 },
+        { x: 3, y: 0 }, { x: 3, y: 1 }, { x: 3, y: -1 }
+      ];
+      visitor = new Visitor(testId, initialPosition, obstacles);
+
+      // 確認初始狀態
+      expect(visitor.position).toEqual(initialPosition);
+      expect(visitor.state).toBe(VisitorState.IDLE);
+      
+      // 嘗試移動到被完全封鎖的區域後方
+      const target: Vector2D = { x: 4, y: 0 };
+      visitor.moveTo(target);
+      
+      // 當完全無法到達目標時，應該保持原位且維持閒置狀態
+      expect(visitor.position).toEqual(initialPosition);
+      expect(visitor.state).toBe(VisitorState.IDLE);
+    });
+
+    it('應該正確處理零等待時間', () => {
+      visitor.startQueuing(0);
+      expect(visitor.satisfaction).toBe(100); // 不應該降低滿意度
+    });
+
+    it('應該限制最大滿意度', () => {
+      // 多次完成遊玩以提升滿意度
+      for (let i = 0; i < 5; i++) {
+        visitor.startPlaying();
+        visitor.finishPlaying();
+      }
+      
+      expect(visitor.satisfaction).toBeLessThanOrEqual(100);
+    });
+
+    it('應該正確處理地圖邊界限制', () => {
+      const mapBoundary = {
+        minX: -10,
+        maxX: 10,
+        minY: -10,
+        maxY: 10
+      };
+      
+      visitor = new Visitor(testId, initialPosition, [], mapBoundary);
+      
+      // 嘗試移動到地圖外
+      const outOfBoundsTarget: Vector2D = { x: 15, y: 15 };
+      visitor.moveTo(outOfBoundsTarget);
+      
+      // 應該保持原位且維持閒置狀態
+      expect(visitor.position).toEqual(initialPosition);
+      expect(visitor.state).toBe(VisitorState.IDLE);
+      
+      // 嘗試移動到地圖內有效位置
+      const validTarget: Vector2D = { x: 5, y: 5 };
+      visitor.moveTo(validTarget);
+      
+      // 應該進入移動狀態
+      expect(visitor.state).toBe(VisitorState.MOVING);
+    });
+  });
+});
