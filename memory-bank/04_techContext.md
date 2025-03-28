@@ -3,8 +3,8 @@
 ## 技術棧選擇
 
 ### 核心技術
-- **前端框架**: React 18
-- **狀態管理**: Redux Toolkit
+- **前端框架**: React 18.2
+- **狀態管理**: Redux Toolkit 2.2
 - **渲染引擎**: Canvas API
 - **版本控制**: Git
 
@@ -13,18 +13,21 @@
 - **版本管理**: GitHub
 - **專案管理**: GitHub Projects
 - **文件管理**: Markdown
+- **建置工具**: Vite 5.4
+- **測試框架**: Cypress 13.6
 
 ### 第三方框架
-- **UI Framework**: Material-UI (MUI)
-- **動畫**: GSAP
+- **UI Framework**: Material-UI (MUI) 5.15
+- **動畫**: GSAP 3.12
+- **樣式**: Emotion 11.11
 - **遊戲引擎**: Custom Canvas Engine
 - **路由**: React Router
 
 ## 開發環境設置
 
 ### 系統要求
-- **Node.js**: 16.0.0 或更高版本
-- **npm**: 7.0.0 或更高版本
+- **Node.js**: 20.12.0 或更高版本
+- **npm**: 10.0.0 或更高版本
 - **瀏覽器**: 支援最新版本的 Chrome/Firefox/Safari
 
 ### 開發工具安裝
@@ -36,19 +39,23 @@
 ### 環境配置
 ```json
 {
-  "node": ">=16.0.0",
+  "node": ">=20.12.0",
   "dependencies": {
-    "react": "^18.0.0",
-    "react-dom": "^18.0.0",
-    "@reduxjs/toolkit": "^1.9.0",
-    "@mui/material": "^5.0.0",
-    "gsap": "^3.0.0"
+    "@emotion/react": "^11.11.3",
+    "@emotion/styled": "^11.11.0",
+    "@mui/material": "^5.15.11",
+    "@reduxjs/toolkit": "^2.2.1",
+    "gsap": "^3.12.5",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-redux": "^9.1.0"
   },
   "devDependencies": {
-    "typescript": "^4.9.0",
-    "vite": "^4.0.0",
-    "eslint": "^8.0.0",
-    "prettier": "^2.0.0"
+    "@testing-library/cypress": "^10.0.1",
+    "cypress": "^13.6.6",
+    "typescript": "^5.2.2",
+    "vite": "^5.1.4",
+    "eslint": "^8.56.0"
   }
 }
 ```
@@ -75,10 +82,16 @@
 ## 開發規範
 
 ### 程式碼規範
-- 使用 TypeScript 強型別
-- ESLint + Prettier 程式碼格式化
+- 使用 TypeScript 5.2 強型別
+- ESLint 8.56 + Prettier 程式碼格式化
 - React 最佳實踐指南
 - 單元測試覆蓋率 >80%
+
+### 測試規範
+- 使用 Cypress 進行端到端測試
+- 自動化截圖測試
+- 狀態管理測試
+- Headless 測試支援
 
 ### 資料結構
 ```typescript
@@ -107,7 +120,7 @@ interface RootState {
 ## 前端架構
 
 ### 開發環境
-1. 本地開發伺服器
+1. Vite 開發伺服器
 2. 熱重載
 3. 開發者工具
 4. 效能監控
@@ -125,9 +138,11 @@ interface RootState {
 - 效能分析
 - 錯誤追蹤
 - 使用者行為
+- 測試覆蓋率
 
 ### 維護計畫
 - 定期更新依賴
 - 程式碼優化
 - 效能調校
 - 功能擴展
+- 自動化測試維護
