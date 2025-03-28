@@ -1,9 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit';
 import visitorReducer from './visitorSlice';
+import visitorConfigReducer from './visitorConfigSlice';
 
 export const store = configureStore({
   reducer: {
-    visitors: visitorReducer
+    visitors: visitorReducer,
+    visitorConfig: visitorConfigReducer
   }
 });
 

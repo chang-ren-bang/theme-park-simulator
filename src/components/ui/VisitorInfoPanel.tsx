@@ -182,16 +182,19 @@ const VisitorInfoPanel: React.FC = () => {
 
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
               <span>滿意度趨勢:</span>
-              <span style={{
-                marginLeft: '8px',
-                color: visitor.prediction.satisfactionTrend > 0 ? '#4CAF50' : '#F44336'
-              }}>
-                {visitor.prediction.satisfactionTrend > 0 ? '↑' : '↓'}
-                {Math.abs(visitor.prediction.satisfactionTrend)}%
+              <span 
+                data-testid="satisfaction-trend"
+                style={{
+                  marginLeft: '8px',
+                  color: visitor.prediction.satisfactionTrend > 0 ? 'rgb(76, 175, 80)' : 'rgb(244, 67, 54)',
+                  fontWeight: 'bold'
+                }}
+              >
+                {`${visitor.prediction.satisfactionTrend > 0 ? '↑' : '↓'}${Math.abs(visitor.prediction.satisfactionTrend)}%`}
               </span>
             </div>
 
-            <div>
+            <div style={{ marginBottom: '4px' }}>
               預計時間: {visitor.prediction.timeToNextState.toFixed(1)}秒
             </div>
           </div>

@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { useAppDispatch } from './hooks/useAppDispatch';
 import { updateVisitor, selectVisitor } from './store/visitorSlice';
 import VisitorInfoPanel from './components/ui/VisitorInfoPanel';
+import { VisitorConfigPanel } from './components/ui/VisitorConfigPanel';
 import './App.css';
 import { Vector2D } from './utils/PathFinder';
 import { VisitorState } from './components/game/Visitor';
@@ -40,7 +41,10 @@ function App() {
       >
         模擬選擇遊客
       </button>
-      <VisitorInfoPanel />
+      <div style={{ display: 'flex', gap: '20px', padding: '20px' }}>
+        <VisitorInfoPanel />
+        <VisitorConfigPanel />
+      </div>
     </div>
   );
 }

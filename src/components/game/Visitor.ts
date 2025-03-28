@@ -33,6 +33,12 @@ export interface IVisitor {
  * 管理遊客的行為、狀態和滿意度
  */
 export class Visitor implements IVisitor {
+  /**
+   * 用於測試的輔助方法：直接設置滿意度
+   */
+  public _testSetSatisfaction(value: number): void {
+    this.satisfactionManager.updateSatisfaction(value - this.satisfaction);
+  }
   public readonly id: string;
   public position: Vector2D;
   public state: VisitorState;
@@ -261,23 +267,28 @@ export class Visitor implements IVisitor {
 
     switch (this.state) {
       case VisitorState.IDLE:
-        // 閒置狀態可能會轉向移動或離開
-        if (this.needsNewAttraction()) {
-          nextState = VisitorState.MOVING;
-          timeToNextState = 1; // 預計1秒後開始移動
-          satisfactionTrend = -5; // 預計持續下降
-        }
+        // 在閒置狀態下，總是預測會開始移動
+        nextState = VisitorState.MOVING;
+        timeToNextState = 1; // 預計1秒後開始移動
+        satisfactionTrend = this.needsNewAttraction() ? -5 : -2; // 根據需求調整趨勢
         break;
 
       case VisitorState.MOVING:
+        // 移動狀態下，總是提供位置預測
         if (this.currentPath.length > 0) {
           nextPosition = this.currentPath[0];
           const distance = Math.sqrt(
             Math.pow(nextPosition.x - this.position.x, 2) +
             Math.pow(nextPosition.y - this.position.y, 2)
           );
+          nextState = VisitorState.IDLE;
           timeToNextState = distance / 4; // 以移動速度4計算到達時間
           satisfactionTrend = -2; // 移動過程緩慢下降
+        } else {
+          // 即使沒有路徑，也提供基本預測
+          nextState = VisitorState.IDLE;
+          timeToNextState = 0.5; // 短暫延遲
+          satisfactionTrend = -1; // 輕微下降
         }
         break;
 
@@ -298,7 +309,7 @@ export class Visitor implements IVisitor {
         break;
     }
 
-    // 更新預測資訊
+    // 更新預測資訊（移除條件，總是提供預測）
     this.prediction = {
       nextState,
       nextPosition,

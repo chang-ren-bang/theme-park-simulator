@@ -139,7 +139,8 @@ describe('VisitorInfoPanel', () => {
       render(<VisitorInfoPanel />);
       const trendText = screen.getByText('↓5%');
       expect(trendText).toBeInTheDocument();
-      expect(trendText.parentElement?.style.color).toBe('#F44336');
+      const trendElement = screen.getByTestId('satisfaction-trend');
+      expect(trendElement.style.color).toBe('rgb(244, 67, 54)');
     });
 
     it('應該顯示正確的預計時間', () => {

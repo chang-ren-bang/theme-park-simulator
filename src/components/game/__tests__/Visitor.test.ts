@@ -92,8 +92,8 @@ describe('Visitor', () => {
 
   describe('行為預測', () => {
     it('應該在閒置狀態下提供正確的預測', () => {
-      // 先降低滿意度使遊客需要尋找新設施
-      visitor.startQueuing(180); // 3分鐘等待
+      // 使用測試輔助方法直接設置滿意度
+      visitor._testSetSatisfaction(40);
       visitor.update(1);
       
       expect(visitor.prediction).toBeDefined();
@@ -104,6 +104,7 @@ describe('Visitor', () => {
     it('應該在移動狀態下提供位置預測', () => {
       const target: Vector2D = { x: 5, y: 5 };
       visitor.moveTo(target);
+      visitor.update(1); // 需要一次更新來產生預測
       
       expect(visitor.prediction).toBeDefined();
       expect(visitor.prediction?.nextPosition).toBeDefined();
