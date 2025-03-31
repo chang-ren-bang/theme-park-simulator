@@ -4,8 +4,10 @@ import { useAppSelector } from '../../hooks/useAppSelector';
 import {
   selectSatisfactionParams,
   selectBehaviorParams,
+  selectVisitorParams,
   updateSatisfactionParams,
   updateBehaviorParams,
+  updateVisitorParams,
   resetConfig
 } from '../../store/visitorConfigSlice';
 
@@ -60,6 +62,7 @@ export const VisitorConfigPanel: React.FC = () => {
   const dispatch = useAppDispatch();
   const satisfactionParams = useAppSelector(selectSatisfactionParams);
   const behaviorParams = useAppSelector(selectBehaviorParams);
+  const visitorParams = useAppSelector(selectVisitorParams);
 
   return (
     <div className="visitor-config-panel">
@@ -144,6 +147,39 @@ export const VisitorConfigPanel: React.FC = () => {
           min={60}
           max={900}
           step={30}
+        />
+      </div>
+
+      <div className="config-section">
+        <h3>遊客參數</h3>
+        <ConfigItem
+          label="遊客總數"
+          value={visitorParams.totalVisitors}
+          onChange={(value) =>
+            dispatch(updateVisitorParams({ totalVisitors: value }))
+          }
+          min={1}
+          max={200}
+        />
+        <ConfigItem
+          label="生成間隔 (ms)"
+          value={visitorParams.spawnInterval}
+          onChange={(value) =>
+            dispatch(updateVisitorParams({ spawnInterval: value }))
+          }
+          min={500}
+          max={5000}
+          step={100}
+        />
+        <ConfigItem
+          label="移動速度"
+          value={visitorParams.moveSpeed}
+          onChange={(value) =>
+            dispatch(updateVisitorParams({ moveSpeed: value }))
+          }
+          min={1}
+          max={5}
+          step={0.1}
         />
       </div>
 

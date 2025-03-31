@@ -33,12 +33,6 @@ export interface IVisitor {
  * 管理遊客的行為、狀態和滿意度
  */
 export class Visitor implements IVisitor {
-  /**
-   * 用於測試的輔助方法：直接設置滿意度
-   */
-  public _testSetSatisfaction(value: number): void {
-    this.satisfactionManager.updateSatisfaction(value - this.satisfaction);
-  }
   public readonly id: string;
   public position: Vector2D;
   public state: VisitorState;
@@ -54,16 +48,19 @@ export class Visitor implements IVisitor {
   private currentPath: Vector2D[];
   private lowSatisfactionCount: number;
   private lastUpdateTime: number;
+  private moveSpeed: number;
   private static readonly SATISFACTION_THRESHOLD = 50;
   private static readonly MAX_LOW_SATISFACTION_COUNT = 3;
 
   constructor(
     id: string,
     initialPosition: Vector2D,
-    obstacles: Vector2D[] = []
+    obstacles: Vector2D[] = [],
+    moveSpeed: number = 2
   ) {
     this.lastUpdateTime = Date.now();
     this.id = id;
+    this.moveSpeed = moveSpeed;
     // 確保初始位置為整數
     this.position = {
       x: Math.round(initialPosition.x),
@@ -81,6 +78,13 @@ export class Visitor implements IVisitor {
     
     // 初始化滿意度管理器
     this.satisfactionManager = new SatisfactionManager();
+  }
+
+  /**
+   * 設置移動速度
+   */
+  public setMoveSpeed(speed: number): void {
+    this.moveSpeed = speed;
   }
 
   /**
@@ -158,37 +162,37 @@ export class Visitor implements IVisitor {
       );
 
       // 到達檢查和移動邏輯
-      const speed = 4; // 移動速度（單位/秒）
-      const step = Math.min(speed * deltaTime, distance);
+      const step = Math.min(this.moveSpeed * deltaTime, distance);
 
       if (step >= distance) {
         // 直接到達目標點
         this.position = { ...nextPosition };
-        this.currentPath = [];
-        this.state = VisitorState.IDLE;
+        this.currentPath.shift(); // 移除已到達的點
+        
+        // 如果路徑清空，轉為閒置狀態
+        if (this.currentPath.length === 0) {
+          this.state = VisitorState.IDLE;
+        }
       } else {
         // 計算並更新新位置
         const ratio = step / distance;
-        // 確保位置為整數，避免浮點數精度問題
         this.position = {
-          x: Math.round(this.position.x + (nextPosition.x - this.position.x) * ratio),
-          y: Math.round(this.position.y + (nextPosition.y - this.position.y) * ratio)
+          x: this.position.x + (nextPosition.x - this.position.x) * ratio,
+          y: this.position.y + (nextPosition.y - this.position.y) * ratio
         };
       }
     }
 
     // 檢查滿意度狀態
-    if (this.state !== VisitorState.LEAVING) {  // 只有在非離開狀態才檢查
+    if (this.state !== VisitorState.LEAVING) {
       if (this.satisfactionManager.isBelowThreshold(Visitor.SATISFACTION_THRESHOLD)) {
         this.lowSatisfactionCount++;
         
-        // 如果連續三次低滿意度，準備離開
         if (this.lowSatisfactionCount >= Visitor.MAX_LOW_SATISFACTION_COUNT) {
           this.state = VisitorState.LEAVING;
           return true;
         }
       } else {
-        // 只有在滿意度恢復到閾值以上時才重置計數
         this.lowSatisfactionCount = 0;
       }
     }
@@ -198,16 +202,13 @@ export class Visitor implements IVisitor {
 
   /**
    * 開始排隊
-   * @param waitingTime 預計等待時間（秒）
    */
   public startQueuing(waitingTime: number): void {
     this.state = VisitorState.QUEUING;
-    // 根據等待時間降低滿意度
     if (waitingTime > 0) {
-      const satisfactionDrop = -(waitingTime / 60) * 15; // 每分鐘降低15%
+      const satisfactionDrop = -(waitingTime / 60) * 15;
       this.satisfactionManager.updateSatisfaction(satisfactionDrop);
       
-      // 如果滿意度降至閾值以下，增加低滿意度計數
       if (this.satisfaction < Visitor.SATISFACTION_THRESHOLD) {
         this.lowSatisfactionCount++;
       }
@@ -228,7 +229,6 @@ export class Visitor implements IVisitor {
     this.satisfactionManager.boostAfterPlay();
     this.state = VisitorState.IDLE;
     
-    // 如果滿意度恢復到閾值以上，重置低滿意度計數
     if (this.satisfaction >= Visitor.SATISFACTION_THRESHOLD) {
       this.lowSatisfactionCount = 0;
     }
@@ -238,7 +238,6 @@ export class Visitor implements IVisitor {
    * 更新障礙物資訊
    */
   public updateObstacles(obstacles: Vector2D[]): void {
-    // 確保所有障礙物座標都是整數
     const roundedObstacles = obstacles.map(o => ({
       x: Math.round(o.x),
       y: Math.round(o.y)
@@ -258,7 +257,7 @@ export class Visitor implements IVisitor {
    */
   private updatePrediction(): void {
     const currentTime = Date.now();
-    const timeSinceLastUpdate = (currentTime - this.lastUpdateTime) / 1000; // 轉換為秒
+    const timeSinceLastUpdate = (currentTime - this.lastUpdateTime) / 1000;
     
     let nextState = this.state;
     let nextPosition = undefined;
@@ -267,14 +266,12 @@ export class Visitor implements IVisitor {
 
     switch (this.state) {
       case VisitorState.IDLE:
-        // 在閒置狀態下，總是預測會開始移動
         nextState = VisitorState.MOVING;
-        timeToNextState = 1; // 預計1秒後開始移動
-        satisfactionTrend = this.needsNewAttraction() ? -5 : -2; // 根據需求調整趨勢
+        timeToNextState = 1;
+        satisfactionTrend = this.needsNewAttraction() ? -5 : -2;
         break;
 
       case VisitorState.MOVING:
-        // 移動狀態下，總是提供位置預測
         if (this.currentPath.length > 0) {
           nextPosition = this.currentPath[0];
           const distance = Math.sqrt(
@@ -282,34 +279,32 @@ export class Visitor implements IVisitor {
             Math.pow(nextPosition.y - this.position.y, 2)
           );
           nextState = VisitorState.IDLE;
-          timeToNextState = distance / 4; // 以移動速度4計算到達時間
-          satisfactionTrend = -2; // 移動過程緩慢下降
+          timeToNextState = distance / this.moveSpeed;
+          satisfactionTrend = -2;
         } else {
-          // 即使沒有路徑，也提供基本預測
           nextState = VisitorState.IDLE;
-          timeToNextState = 0.5; // 短暫延遲
-          satisfactionTrend = -1; // 輕微下降
+          timeToNextState = 0.5;
+          satisfactionTrend = -1;
         }
         break;
 
       case VisitorState.QUEUING:
         nextState = VisitorState.PLAYING;
-        timeToNextState = 5; // 預計5秒後開始遊玩
-        satisfactionTrend = -15; // 排隊期間快速下降
+        timeToNextState = 5;
+        satisfactionTrend = -15;
         break;
 
       case VisitorState.PLAYING:
         nextState = VisitorState.IDLE;
-        timeToNextState = 3; // 預計3秒後結束遊玩
-        satisfactionTrend = 10; // 遊玩期間上升
+        timeToNextState = 3;
+        satisfactionTrend = 10;
         break;
 
       case VisitorState.LEAVING:
-        satisfactionTrend = -10; // 離開時快速下降
+        satisfactionTrend = -10;
         break;
     }
 
-    // 更新預測資訊（移除條件，總是提供預測）
     this.prediction = {
       nextState,
       nextPosition,
@@ -318,5 +313,12 @@ export class Visitor implements IVisitor {
     };
 
     this.lastUpdateTime = currentTime;
+  }
+
+  /**
+   * 用於測試的輔助方法：直接設置滿意度
+   */
+  public _testSetSatisfaction(value: number): void {
+    this.satisfactionManager.updateSatisfaction(value - this.satisfaction);
   }
 }

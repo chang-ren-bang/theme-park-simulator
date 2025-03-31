@@ -4,6 +4,7 @@ import { Facility } from './Facility';
 import type { IVisitor as VisitorInfo } from './Visitor';
 import { VisitorState } from './Visitor';
 import { FacilityStatus } from './types/FacilityTypes';
+import { selectVisitorParams } from '../../store/visitorConfigSlice';
 
 interface GameCanvasProps {
   width?: number;
@@ -19,6 +20,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
   
   const facilitiesMap = useAppSelector(state => state.facilities.facilities);
   const visitorsMap = useAppSelector(state => state.visitors.visitors);
+  const visitorParams = useAppSelector(selectVisitorParams);
 
   // 轉換為陣列以便渲染
   const facilities = Object.values(facilitiesMap);
@@ -48,9 +50,13 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
   useEffect(() => {
     if (!context) return;
 
+    let lastTime = performance.now();
     let animationFrameId: number;
 
-    const render = () => {
+    const render = (currentTime: number) => {
+      const deltaTime = (currentTime - lastTime) / 1000;  // 轉換為秒
+      lastTime = currentTime;
+
       // 清除畫布
       context.clearRect(0, 0, width, height);
 
@@ -62,8 +68,19 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
         drawFacility(context, facility);
       });
 
-      // 繪製遊客
+      // 更新遊客移動速度並繪製
       visitors.forEach(visitor => {
+        // 使用更安全的型別檢查
+        const visitorWithSpeed = visitor as unknown as { 
+          update: (deltaTime: number) => boolean;
+          setMoveSpeed: (speed: number) => void;
+        };
+        
+        if ('setMoveSpeed' in visitor) {
+          visitorWithSpeed.setMoveSpeed(visitorParams.moveSpeed);
+          visitorWithSpeed.update(deltaTime);
+        }
+        
         drawVisitor(context, visitor);
       });
 
@@ -71,12 +88,12 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
       animationFrameId = requestAnimationFrame(render);
     };
 
-    render();
+    render(performance.now());
 
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, [context, facilities, visitors, width, height]);
+  }, [context, facilities, visitors, width, height, visitorParams]);
 
   const drawGrid = (
     ctx: CanvasRenderingContext2D, 
@@ -158,8 +175,42 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
     visitor: VisitorInfo
   ) => {
     const radius = 10;
+    // 不再將位置四捨五入，使動畫更平滑
     const x = visitor.position.x * 40 + 20;
     const y = visitor.position.y * 40 + 20;
+
+    // 如果遊客正在移動，添加動畫效果
+    if (visitor.state === VisitorState.MOVING && visitor.prediction?.nextPosition) {
+      ctx.save();
+      
+      // 繪製移動軌跡
+      ctx.strokeStyle = '#2196F3';
+      ctx.setLineDash([2, 2]);
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(
+        visitor.prediction.nextPosition.x * 40 + 20,
+        visitor.prediction.nextPosition.y * 40 + 20
+      );
+      ctx.stroke();
+
+      // 添加移動方向指示器
+      const dx = visitor.prediction.nextPosition.x * 40 + 20 - x;
+      const dy = visitor.prediction.nextPosition.y * 40 + 20 - y;
+      const angle = Math.atan2(dy, dx);
+      
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+      ctx.beginPath();
+      ctx.moveTo(radius + 5, 0);
+      ctx.lineTo(radius + 12, -4);
+      ctx.lineTo(radius + 12, 4);
+      ctx.closePath();
+      ctx.fillStyle = '#2196F3';
+      ctx.fill();
+      
+      ctx.restore();
+    }
 
     // 根據遊客狀態設置顏色
     let fillColor = '#2196F3';   // 預設：遊覽中

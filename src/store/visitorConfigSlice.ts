@@ -14,6 +14,11 @@ interface VisitorConfigState {
     pathfindingRange: number;
     queueingTimeLimit: number;
   };
+  visitorParams: {
+    totalVisitors: number;
+    spawnInterval: number;
+    moveSpeed: number;
+  };
 }
 
 const initialState: VisitorConfigState = {
@@ -28,6 +33,11 @@ const initialState: VisitorConfigState = {
     updateInterval: 1000,
     pathfindingRange: 100,
     queueingTimeLimit: 300
+  },
+  visitorParams: {
+    totalVisitors: 50,
+    spawnInterval: 2000,
+    moveSpeed: 2
   }
 };
 
@@ -53,9 +63,19 @@ export const visitorConfigSlice = createSlice({
         ...action.payload
       };
     },
+    updateVisitorParams: (
+      state,
+      action: PayloadAction<Partial<VisitorConfigState['visitorParams']>>
+    ) => {
+      state.visitorParams = {
+        ...state.visitorParams,
+        ...action.payload
+      };
+    },
     resetConfig: (state) => {
       state.satisfactionParams = initialState.satisfactionParams;
       state.behaviorParams = initialState.behaviorParams;
+      state.visitorParams = initialState.visitorParams;
     }
   }
 });
@@ -63,6 +83,7 @@ export const visitorConfigSlice = createSlice({
 export const {
   updateSatisfactionParams,
   updateBehaviorParams,
+  updateVisitorParams,
   resetConfig
 } = visitorConfigSlice.actions;
 
@@ -70,5 +91,7 @@ export const selectSatisfactionParams = (state: RootState) =>
   state.visitorConfig.satisfactionParams;
 export const selectBehaviorParams = (state: RootState) =>
   state.visitorConfig.behaviorParams;
+export const selectVisitorParams = (state: RootState) =>
+  state.visitorConfig.visitorParams;
 
 export default visitorConfigSlice.reducer;
