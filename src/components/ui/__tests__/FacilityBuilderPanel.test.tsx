@@ -133,4 +133,98 @@ describe('FacilityBuilderPanel', () => {
     // 確認編輯面板已關閉
     expect(screen.queryByText('編輯設施')).not.toBeInTheDocument();
   });
+
+  it('應該能夠刪除設施', async () => {
+    const { store } = renderWithRedux(<FacilityBuilderPanel />);
+    
+    await act(async () => {
+      store.dispatch(buildFacility(testFacilityData));
+    });
+
+    // 模擬 window.confirm
+    const confirmSpy = jest.spyOn(window, 'confirm');
+    confirmSpy.mockImplementation(() => true);
+
+    // 點擊刪除按鈕
+    fireEvent.click(screen.getByRole('button', { name: '移除' }));
+
+    // 確認彈出確認視窗
+    expect(confirmSpy).toHaveBeenCalled();
+
+    // 確認設施已被刪除
+    expect(screen.queryByTestId('facility-info')).not.toBeInTheDocument();
+
+    // 清理 spy
+    confirmSpy.mockRestore();
+  });
+
+  it('應該能夠儲存設施編輯', async () => {
+    const { store } = renderWithRedux(<FacilityBuilderPanel />);
+    
+    await act(async () => {
+      store.dispatch(buildFacility(testFacilityData));
+    });
+    
+    // 選擇設施
+    const facilityElement = screen.getByTestId('facility-info');
+    fireEvent.click(facilityElement);
+    
+    // 修改設施資訊
+    fireEvent.change(screen.getByTestId('edit-x-coord'), {
+      target: { value: '15' }
+    });
+    fireEvent.change(screen.getByTestId('edit-y-coord'), {
+      target: { value: '25' }
+    });
+    fireEvent.change(screen.getByTestId('edit-capacity'), {
+      target: { value: '60' }
+    });
+
+    // 儲存變更
+    fireEvent.click(screen.getByRole('button', { name: '儲存變更' }));
+
+    // 確認更新後的資訊
+    const updatedFacilityInfo = screen.getByTestId('facility-info');
+    expect(updatedFacilityInfo).toHaveTextContent('位置: (15, 25)');
+    expect(updatedFacilityInfo).toHaveTextContent('容量: 60');
+  });
+
+  it('應該驗證輸入值', () => {
+    renderWithRedux(<FacilityBuilderPanel />);
+
+    // 測試負數座標
+    const xInput = screen.getByLabelText('X 座標：');
+    fireEvent.change(xInput, { target: { value: '-1' } });
+    expect(xInput).toHaveValue(0);
+
+    // 測試容量範圍
+    const capacityInput = screen.getByLabelText('容量：');
+    fireEvent.change(capacityInput, { target: { value: '0' } });
+    expect(capacityInput).toHaveAttribute('min', '1');
+    fireEvent.change(capacityInput, { target: { value: '101' } });
+    expect(capacityInput).toHaveAttribute('max', '100');
+  });
+
+  it('應該在設施建造後正確更新 UI', async () => {
+    const { store } = renderWithRedux(<FacilityBuilderPanel />);
+    
+    // 建造多個設施
+    await act(async () => {
+      store.dispatch(buildFacility({
+        ...testFacilityData,
+        name: '設施 A'
+      }));
+      store.dispatch(buildFacility({
+        ...testFacilityData,
+        name: '設施 B',
+        position: { x: 30, y: 40 }
+      }));
+    });
+
+    // 確認所有設施都被顯示
+    const facilityInfos = screen.getAllByTestId('facility-info');
+    expect(facilityInfos).toHaveLength(2);
+    expect(facilityInfos[0]).toHaveTextContent('設施 A');
+    expect(facilityInfos[1]).toHaveTextContent('設施 B');
+  });
 });

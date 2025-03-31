@@ -35,9 +35,22 @@ const FacilityBuilderPanel: React.FC = () => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, isEdit = false) => {
     const { name, value } = e.target;
     const setter = isEdit ? setEditFormData : setFormData;
+    
+    // 數值驗證
+    let validatedValue: string | number = value;
+    if (name !== 'name') {
+      const numValue = Number(value);
+      if (name === 'capacity') {
+        validatedValue = Math.max(1, Math.min(100, numValue));
+      } else {
+        // x 和 y 座標
+        validatedValue = Math.max(0, numValue);
+      }
+    }
+
     setter(prev => ({
       ...prev,
-      [name]: name === 'name' ? value : Number(value)
+      [name]: name === 'name' ? validatedValue : Number(validatedValue)
     }));
   };
 
