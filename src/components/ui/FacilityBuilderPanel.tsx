@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAppSelector } from '../../hooks/useAppSelector';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { buildFacility, moveFacility, updateCapacity, removeFacility } from '../../store/facilitySlice';
+import { FacilityStatus } from '../game/types/FacilityTypes';
 // css styles are handled by the build system
 
 interface FacilityFormData {
@@ -9,6 +10,9 @@ interface FacilityFormData {
   x: number;
   y: number;
   capacity: number;
+  minDuration: number;
+  maxDuration: number;
+  maxQueueLength: number;
 }
 
 const initialFormData: FacilityFormData = {
@@ -16,6 +20,9 @@ const initialFormData: FacilityFormData = {
   x: 0,
   y: 0,
   capacity: 10,
+  minDuration: 1,
+  maxDuration: 5,
+  maxQueueLength: 50,
 };
 
 const FacilityBuilderPanel: React.FC = () => {
@@ -28,9 +35,26 @@ const FacilityBuilderPanel: React.FC = () => {
     const facilitiesObj = state.facilities.facilities;
     return Object.entries(facilitiesObj).map(([id, facility]) => ({
       id,
-      facility
+      facility,
+      status: facility.getStatus(),
+      stats: facility.getStats()
     }));
   });
+
+  const getStatusColor = (status: FacilityStatus): string => {
+    switch (status) {
+      case FacilityStatus.OPERATIONAL: return 'green';
+      case FacilityStatus.LOADING: return 'blue';
+      case FacilityStatus.RUNNING: return 'purple';
+      case FacilityStatus.MAINTENANCE: return 'orange';
+      case FacilityStatus.CLOSED: return 'red';
+      default: return 'gray';
+    }
+  };
+
+  const formatDuration = (minutes: number): string => {
+    return minutes < 60 ? `${minutes}分鐘` : `${Math.floor(minutes / 60)}小時${minutes % 60}分鐘`;
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, isEdit = false) => {
     const { name, value } = e.target;
@@ -42,6 +66,12 @@ const FacilityBuilderPanel: React.FC = () => {
       const numValue = Number(value);
       if (name === 'capacity') {
         validatedValue = Math.max(1, Math.min(100, numValue));
+      } else if (name === 'minDuration') {
+        validatedValue = Math.max(1, Math.min(formData.maxDuration, numValue));
+      } else if (name === 'maxDuration') {
+        validatedValue = Math.max(formData.minDuration, numValue);
+      } else if (name === 'maxQueueLength') {
+        validatedValue = Math.max(1, numValue);
       } else {
         // x 和 y 座標
         validatedValue = Math.max(0, numValue);
@@ -63,9 +93,9 @@ const FacilityBuilderPanel: React.FC = () => {
         y: formData.y
       },
       capacity: formData.capacity,
-      minDuration: 1,
-      maxDuration: 5,
-      maxQueueLength: 50
+      minDuration: formData.minDuration,
+      maxDuration: formData.maxDuration,
+      maxQueueLength: formData.maxQueueLength
     }));
     setFormData(initialFormData);
   };
@@ -103,16 +133,19 @@ const FacilityBuilderPanel: React.FC = () => {
 
   const handleSelect = (facilityId: string) => {
     const facilityItem = facilities.find(f => f.id === facilityId);
-    const facility = facilityItem?.facility;
-    if (facility) {
-      setSelectedFacilityId(facilityId);
-      setEditFormData({
-        name: facility.getName(),
-        x: facility.getPosition().x,
-        y: facility.getPosition().y,
-        capacity: facility.getCapacity()
-      });
-    }
+    if (!facilityItem) return;
+    
+    const { facility } = facilityItem;
+    setSelectedFacilityId(facilityId);
+    setEditFormData({
+      name: facility.getName(),
+      x: facility.getPosition().x,
+      y: facility.getPosition().y,
+      capacity: facility.getCapacity(),
+      minDuration: facility.getMinDuration(),
+      maxDuration: facility.getMaxDuration(),
+      maxQueueLength: facility.getMaxQueueLength()
+    });
   };
 
   return (
@@ -177,6 +210,52 @@ const FacilityBuilderPanel: React.FC = () => {
           </label>
         </div>
 
+        <div>
+          <label>
+            最短遊玩時間（分鐘）：
+            <input
+              type="number"
+              name="minDuration"
+              value={formData.minDuration}
+              onChange={handleInputChange}
+              min="1"
+              max={formData.maxDuration}
+              required
+              data-testid="min-duration"
+            />
+          </label>
+        </div>
+
+        <div>
+          <label>
+            最長遊玩時間（分鐘）：
+            <input
+              type="number"
+              name="maxDuration"
+              value={formData.maxDuration}
+              onChange={handleInputChange}
+              min={formData.minDuration}
+              required
+              data-testid="max-duration"
+            />
+          </label>
+        </div>
+
+        <div>
+          <label>
+            最大排隊人數：
+            <input
+              type="number"
+              name="maxQueueLength"
+              value={formData.maxQueueLength}
+              onChange={handleInputChange}
+              min="1"
+              required
+              data-testid="max-queue-length"
+            />
+          </label>
+        </div>
+
         <button type="submit">建造設施</button>
       </form>
 
@@ -184,7 +263,7 @@ const FacilityBuilderPanel: React.FC = () => {
       <div className="facilities-list">
         <h3>已建設施</h3>
         <div className="facilities-grid">
-          {facilities.map(({ id, facility }) => (
+          {facilities.map(({ id, facility, status, stats }) => (
             <div 
               key={id} 
               className={`facility-item ${selectedFacilityId === id ? 'selected' : ''}`}
@@ -194,6 +273,15 @@ const FacilityBuilderPanel: React.FC = () => {
                 <strong>{facility.getName()}</strong>
                 <div>位置: ({facility.getPosition().x}, {facility.getPosition().y})</div>
                 <div>容量: {facility.getCapacity()}</div>
+                <div className="facility-status" style={{ color: getStatusColor(status) }} data-testid="facility-status">
+                  狀態: {status}
+                </div>
+                <div className="facility-stats" data-testid="facility-stats">
+                  <div>排隊人數: {stats.queueLength}/{facility.getMaxQueueLength()}</div>
+                  <div>目前遊玩: {stats.currentVisitors}/{facility.getCapacity()}</div>
+                  <div>等待時間: {formatDuration(stats.averageWaitTime)}</div>
+                  <div>總遊客數: {stats.totalVisitors}</div>
+                </div>
               </div>
               <button 
                 className="delete-btn"

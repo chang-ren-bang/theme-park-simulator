@@ -63,6 +63,18 @@ export class Facility {
     return this.queue.length;
   }
 
+  public getMinDuration(): number {
+    return this.config.minDuration;
+  }
+
+  public getMaxDuration(): number {
+    return this.config.maxDuration;
+  }
+
+  public getMaxQueueLength(): number {
+    return this.config.maxQueueLength;
+  }
+
   // 事件監聽相關方法
   public addEventListener(listener: EventListener): void {
     this.eventListeners.add(listener);

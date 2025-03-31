@@ -7,6 +7,7 @@ import facilityReducer from '../../../store/facilitySlice';
 import visitorReducer from '../../../store/visitorSlice';
 import visitorConfigReducer from '../../../store/visitorConfigSlice';
 import FacilityBuilderPanel from '../FacilityBuilderPanel';
+import { FacilityStatus } from '../../../components/game/types/FacilityTypes';
 
 import { buildFacility } from '../../../store/facilitySlice';
 
@@ -26,9 +27,9 @@ const testFacilityData = {
   name: '測試設施',
   position: { x: 10, y: 20 },
   capacity: 50,
-  minDuration: 1,
-  maxDuration: 5,
-  maxQueueLength: 50
+  minDuration: 3,
+  maxDuration: 8,
+  maxQueueLength: 75
 };
 
 // 封裝渲染函數
@@ -49,7 +50,9 @@ describe('FacilityBuilderPanel', () => {
     expect(screen.getByLabelText('X 座標：')).toBeInTheDocument();
     expect(screen.getByLabelText('Y 座標：')).toBeInTheDocument();
     expect(screen.getByLabelText('容量：')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '建造設施' })).toBeInTheDocument();
+    expect(screen.getByLabelText('最短遊玩時間（分鐘）：')).toBeInTheDocument();
+    expect(screen.getByLabelText('最長遊玩時間（分鐘）：')).toBeInTheDocument();
+    expect(screen.getByLabelText('最大排隊人數：')).toBeInTheDocument();
   });
 
   it('應該可以提交建造表單', () => {
@@ -68,6 +71,15 @@ describe('FacilityBuilderPanel', () => {
     fireEvent.change(screen.getByLabelText('容量：'), {
       target: { value: '50' }
     });
+    fireEvent.change(screen.getByLabelText('最短遊玩時間（分鐘）：'), {
+      target: { value: '3' }
+    });
+    fireEvent.change(screen.getByLabelText('最長遊玩時間（分鐘）：'), {
+      target: { value: '8' }
+    });
+    fireEvent.change(screen.getByLabelText('最大排隊人數：'), {
+      target: { value: '75' }
+    });
 
     // 提交表單
     fireEvent.click(screen.getByRole('button', { name: '建造設施' }));
@@ -77,6 +89,26 @@ describe('FacilityBuilderPanel', () => {
     expect(screen.getByLabelText('X 座標：')).toHaveValue(0);
     expect(screen.getByLabelText('Y 座標：')).toHaveValue(0);
     expect(screen.getByLabelText('容量：')).toHaveValue(10);
+    expect(screen.getByLabelText('最短遊玩時間（分鐘）：')).toHaveValue(1);
+    expect(screen.getByLabelText('最長遊玩時間（分鐘）：')).toHaveValue(5);
+    expect(screen.getByLabelText('最大排隊人數：')).toHaveValue(50);
+  });
+
+  it('應該正確驗證遊玩時間範圍', () => {
+    renderWithRedux(<FacilityBuilderPanel />);
+    
+    const minDurationInput = screen.getByTestId('min-duration');
+    const maxDurationInput = screen.getByTestId('max-duration');
+    
+    // 最短時間不能大於最長時間
+    fireEvent.change(maxDurationInput, { target: { value: '5' } });
+    fireEvent.change(minDurationInput, { target: { value: '8' } });
+    expect(minDurationInput).toHaveValue(5);
+    
+    // 最長時間不能小於最短時間
+    fireEvent.change(minDurationInput, { target: { value: '3' } });
+    fireEvent.change(maxDurationInput, { target: { value: '2' } });
+    expect(maxDurationInput).toHaveValue(3);
   });
 
   it('應該顯示已建設施列表', async () => {
@@ -86,12 +118,22 @@ describe('FacilityBuilderPanel', () => {
       store.dispatch(buildFacility(testFacilityData));
     });
 
-    // 檢查是否正確顯示
-    expect(screen.getByText('已建設施')).toBeInTheDocument();
+    // 檢查基本資訊是否正確顯示
     const facilityElement = screen.getByTestId('facility-info');
     expect(facilityElement).toHaveTextContent(testFacilityData.name);
     expect(facilityElement).toHaveTextContent(`位置: (${testFacilityData.position.x}, ${testFacilityData.position.y})`);
     expect(facilityElement).toHaveTextContent(`容量: ${testFacilityData.capacity}`);
+
+    // 檢查狀態和統計資料是否正確顯示
+    const statusElement = screen.getByTestId('facility-status');
+    expect(statusElement).toHaveTextContent(`狀態: ${FacilityStatus.OPERATIONAL}`);
+    expect(statusElement).toHaveStyle({ color: 'green' });
+
+    const statsElement = screen.getByTestId('facility-stats');
+    expect(statsElement).toHaveTextContent('排隊人數: 0/75');
+    expect(statsElement).toHaveTextContent('目前遊玩: 0/50');
+    expect(statsElement).toHaveTextContent('等待時間: 0分鐘');
+    expect(statsElement).toHaveTextContent('總遊客數: 0');
   });
 
   it('應該能夠選擇和編輯設施', async () => {
@@ -189,7 +231,7 @@ describe('FacilityBuilderPanel', () => {
     expect(updatedFacilityInfo).toHaveTextContent('容量: 60');
   });
 
-  it('應該驗證輸入值', () => {
+  it('應該正確驗證輸入值', () => {
     renderWithRedux(<FacilityBuilderPanel />);
 
     // 測試負數座標
@@ -200,9 +242,14 @@ describe('FacilityBuilderPanel', () => {
     // 測試容量範圍
     const capacityInput = screen.getByLabelText('容量：');
     fireEvent.change(capacityInput, { target: { value: '0' } });
-    expect(capacityInput).toHaveAttribute('min', '1');
+    expect(capacityInput).toHaveValue(1);
     fireEvent.change(capacityInput, { target: { value: '101' } });
-    expect(capacityInput).toHaveAttribute('max', '100');
+    expect(capacityInput).toHaveValue(100);
+
+    // 測試最大排隊人數
+    const maxQueueInput = screen.getByTestId('max-queue-length');
+    fireEvent.change(maxQueueInput, { target: { value: '0' } });
+    expect(maxQueueInput).toHaveValue(1);
   });
 
   it('應該在設施建造後正確更新 UI', async () => {
