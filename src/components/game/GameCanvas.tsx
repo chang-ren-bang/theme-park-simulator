@@ -2,6 +2,8 @@ import React, { useRef, useEffect, useState } from 'react';
 import { useAppSelector } from '../../hooks/useAppSelector';
 import { Facility } from './Facility';
 import type { IVisitor as VisitorInfo } from './Visitor';
+import { VisitorState } from './Visitor';
+import { FacilityStatus } from './types/FacilityTypes';
 
 interface GameCanvasProps {
   width?: number;
@@ -106,16 +108,30 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
     ctx: CanvasRenderingContext2D, 
     facility: Facility,
   ) => {
-    ctx.fillStyle = '#4CAF50';
-    ctx.strokeStyle = '#388E3C';
-    ctx.lineWidth = 2;
-
     const size = 38; // 略小於網格大小
     const position = facility.getPosition();
     const x = position.x * 40 + 1;
     const y = position.y * 40 + 1;
 
+    // 根據設施狀態設置顏色
+    let fillColor = '#4CAF50';  // 預設：營運中
+    let strokeColor = '#388E3C';
+    
+    switch(facility.getStatus()) {
+      case FacilityStatus.MAINTENANCE:
+        fillColor = '#FFC107';  // 維護中
+        strokeColor = '#FFA000';
+        break;
+      case FacilityStatus.CLOSED:
+        fillColor = '#F44336';  // 關閉中
+        strokeColor = '#D32F2F';
+        break;
+    }
+
     // 繪製設施外框
+    ctx.fillStyle = fillColor;
+    ctx.strokeStyle = strokeColor;
+    ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.rect(x, y, size, size);
     ctx.fill();
@@ -126,7 +142,15 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
     ctx.font = '12px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(facility.getName(), x + size/2, y + size/2);
+    ctx.fillText(facility.getName(), x + size/2, y + size/2 - 8);
+
+    // 繪製等候人數
+    const queueLength = facility.getQueueLength();
+    if (queueLength > 0) {
+      ctx.fillStyle = '#fff';
+      ctx.font = '10px Arial';
+      ctx.fillText(`等候: ${queueLength}人`, x + size/2, y + size/2 + 8);
+    }
   };
 
   const drawVisitor = (
@@ -137,12 +161,31 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
     const x = visitor.position.x * 40 + 20;
     const y = visitor.position.y * 40 + 20;
 
+    // 根據遊客狀態設置顏色
+    let fillColor = '#2196F3';   // 預設：遊覽中
+    let strokeColor = '#1976D2';
+    
+    switch(visitor.state) {
+      case VisitorState.QUEUING:
+        fillColor = '#FF9800';   // 排隊中
+        strokeColor = '#F57C00';
+        break;
+      case VisitorState.PLAYING:
+        fillColor = '#4CAF50';   // 遊玩中
+        strokeColor = '#388E3C';
+        break;
+      case VisitorState.LEAVING:
+        fillColor = '#F44336';   // 離開中
+        strokeColor = '#D32F2F';
+        break;
+    }
+
     // 繪製遊客圖示
     ctx.beginPath();
     ctx.arc(x, y, radius, 0, Math.PI * 2);
-    ctx.fillStyle = '#2196F3';
+    ctx.fillStyle = fillColor;
     ctx.fill();
-    ctx.strokeStyle = '#1976D2';
+    ctx.strokeStyle = strokeColor;
     ctx.lineWidth = 2;
     ctx.stroke();
 
@@ -151,7 +194,13 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
     ctx.font = '10px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(visitor.state, x, y);
+    ctx.fillText(visitor.state, x, y - 15);
+
+    // 繪製滿意度指標
+    const satisfactionIcon = visitor.satisfaction >= 80 ? '😊' : 
+                           visitor.satisfaction >= 50 ? '😐' : '😞';
+    ctx.font = '12px Arial';
+    ctx.fillText(satisfactionIcon, x, y + 15);
   };
 
   return (
