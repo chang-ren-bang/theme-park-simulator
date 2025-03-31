@@ -7,6 +7,7 @@ import { Visitor, VisitorState } from './Visitor';
 import { FacilityStatus } from './types/FacilityTypes';
 import { selectVisitorParams } from '../../store/visitorConfigSlice';
 import { updateVisitor } from '../../store/visitorSlice';
+import { PathFinder } from '../../utils/PathFinder';
 
 interface GameCanvasProps {
   width?: number;
@@ -21,6 +22,9 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
   const dispatch = useAppDispatch();
   const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
   const [visitorCount, setVisitorCount] = useState(0);
+  const visitorInstancesRef = useRef<Map<string, Visitor>>(new Map());
+  const pathFinderRef = useRef<PathFinder>(new PathFinder(1, []));
+  const lastObstaclesHashRef = useRef<string>("");
   
   const facilitiesMap = useAppSelector(state => state.facilities.facilities);
   const visitorsMap = useAppSelector(state => state.visitors.visitors);
@@ -29,6 +33,15 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
   // 建立遊客生成函數
   const spawnVisitor = useCallback(() => {
     if (visitorCount >= visitorParams.totalVisitors) return;
+
+    // 檢查設施變更並更新 PathFinder
+    const obstacles = Object.values(facilitiesMap).map(f => f.getPosition());
+    const obstaclesHash = JSON.stringify(obstacles);
+    
+    if (obstaclesHash !== lastObstaclesHashRef.current) {
+      pathFinderRef.current = new PathFinder(1, obstacles);
+      lastObstaclesHashRef.current = obstaclesHash;
+    }
 
     // 在地圖邊緣隨機生成遊客
     const spawnPoints = [
@@ -42,7 +55,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
     const newVisitor = new Visitor(
       `visitor_${Date.now()}`,
       spawnPoint,
-      Object.values(facilitiesMap).map(f => f.getPosition()),
+      pathFinderRef.current,
       visitorParams.moveSpeed
     );
 
@@ -107,21 +120,75 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
         drawFacility(context, facility);
       });
 
-      // 更新遊客移動速度並繪製
+      // 檢查設施是否有變更
+      const obstacles = Object.values(facilitiesMap).map(f => f.getPosition());
+      const obstaclesHash = JSON.stringify(obstacles);
+      
+      // 只在設施變更時更新 PathFinder
+      if (obstaclesHash !== lastObstaclesHashRef.current) {
+        pathFinderRef.current = new PathFinder(1, obstacles);
+        lastObstaclesHashRef.current = obstaclesHash;
+      }
+
+      // 更新並繪製每個遊客
       visitors.forEach(visitor => {
-        // 使用更安全的型別檢查
-        const visitorWithSpeed = visitor as unknown as { 
-          update: (deltaTime: number) => boolean;
-          setMoveSpeed: (speed: number) => void;
-        };
-        
-        if ('setMoveSpeed' in visitor) {
-          visitorWithSpeed.setMoveSpeed(visitorParams.moveSpeed);
-          visitorWithSpeed.update(deltaTime);
+        // 獲取或創建 Visitor 實例
+        let visitorInstance = visitorInstancesRef.current.get(visitor.id);
+        if (!visitorInstance) {
+          visitorInstance = new Visitor(
+            visitor.id,
+            visitor.position,
+            pathFinderRef.current,
+            visitorParams.moveSpeed
+          );
+          visitorInstancesRef.current.set(visitor.id, visitorInstance);
         }
+
+        // 更新移動速度
+        visitorInstance.setMoveSpeed(visitorParams.moveSpeed);
         
-        drawVisitor(context, visitor);
+        // 檢查是否需要設定新目標
+        if (visitorInstance.state === VisitorState.IDLE) {
+          const facilities = Object.values(facilitiesMap);
+          if (facilities.length > 0) {
+            // 隨機選擇一個設施作為目標
+            const targetFacility = facilities[Math.floor(Math.random() * facilities.length)];
+            visitorInstance.moveTo(targetFacility.getPosition());
+          }
+        }
+
+        const needsUpdate = visitorInstance.update(deltaTime);
+        
+        // 同步回 Redux store
+        if (needsUpdate) {
+          dispatch(updateVisitor({
+            id: visitorInstance.id,
+            position: visitorInstance.position,
+            state: visitorInstance.state,
+            satisfaction: visitorInstance.satisfaction,
+            prediction: visitorInstance.prediction,
+            lowSatisfactionCount: visitorInstance.lowSatisfactionCount
+          }));
+        }
+
+        // 使用最新狀態繪製
+        drawVisitor(context, {
+          ...visitor,
+          position: visitorInstance.position,
+          state: visitorInstance.state,
+          satisfaction: visitorInstance.satisfaction,
+          prediction: visitorInstance.prediction,
+          lowSatisfactionCount: visitorInstance.lowSatisfactionCount
+        });
       });
+
+      // 清理已不存在的遊客實例
+      const currentIds = new Set(visitors.map(v => v.id));
+      for (const [id] of visitorInstancesRef.current) {
+        if (!currentIds.has(id)) {
+          visitorInstancesRef.current.delete(id);
+        }
+      }
 
       // 請求下一幀
       animationFrameId = requestAnimationFrame(render);

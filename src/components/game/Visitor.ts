@@ -20,6 +20,7 @@ export interface IVisitor {
   position: Vector2D;     // 當前位置
   state: VisitorState;    // 當前狀態
   satisfaction: number;   // 當前滿意度
+  lowSatisfactionCount: number;  // 低滿意度計數器
   prediction?: {
     nextState: VisitorState;      // 預測的下一個狀態
     nextPosition?: Vector2D;      // 預測的下一個位置
@@ -46,7 +47,7 @@ export class Visitor implements IVisitor {
   private pathFinder: PathFinder;
   private satisfactionManager: SatisfactionManager;
   private currentPath: Vector2D[];
-  private lowSatisfactionCount: number;
+  public lowSatisfactionCount: number;
   private lastUpdateTime: number;
   private moveSpeed: number;
   private static readonly SATISFACTION_THRESHOLD = 50;
@@ -55,7 +56,7 @@ export class Visitor implements IVisitor {
   constructor(
     id: string,
     initialPosition: Vector2D,
-    obstacles: Vector2D[] = [],
+    pathFinder: PathFinder,
     moveSpeed: number = 2
   ) {
     this.lastUpdateTime = Date.now();
@@ -70,11 +71,8 @@ export class Visitor implements IVisitor {
     this.currentPath = [];
     this.lowSatisfactionCount = 0;
 
-    // 初始化路徑尋找器，使用整數網格大小以避免浮點數精度問題
-    this.pathFinder = new PathFinder(1, obstacles.map(o => ({
-      x: Math.round(o.x),
-      y: Math.round(o.y)
-    })));
+    // 使用共用的路徑尋找器
+    this.pathFinder = pathFinder;
     
     // 初始化滿意度管理器
     this.satisfactionManager = new SatisfactionManager();
@@ -232,17 +230,6 @@ export class Visitor implements IVisitor {
     if (this.satisfaction >= Visitor.SATISFACTION_THRESHOLD) {
       this.lowSatisfactionCount = 0;
     }
-  }
-
-  /**
-   * 更新障礙物資訊
-   */
-  public updateObstacles(obstacles: Vector2D[]): void {
-    const roundedObstacles = obstacles.map(o => ({
-      x: Math.round(o.x),
-      y: Math.round(o.y)
-    }));
-    this.pathFinder.setObstacles(roundedObstacles);
   }
 
   /**
