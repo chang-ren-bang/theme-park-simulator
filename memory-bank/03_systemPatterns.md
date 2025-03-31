@@ -49,6 +49,50 @@ flowchart TD
 - 組件間通信
 - 異步處理
 
+## 已實現的系統模式
+
+### 遊客系統
+1. 狀態模式
+   - 遊客狀態管理（IDLE, MOVING, QUEUING, PLAYING, LEAVING）
+   - 狀態轉換邏輯
+   - 行為控制
+
+2. 策略模式
+   - 路徑尋找策略
+   - 設施選擇邏輯
+   - 決策機制
+
+3. 觀察者模式
+   - 狀態變更通知
+   - 事件處理系統
+   - 即時更新
+
+4. 命令模式
+   - 遊客行為控制
+   - 動作執行
+   - 操作序列
+
+### 設施系統
+1. 工廠模式
+   - 設施類型註冊
+   - 實例創建管理
+   - 配置驅動
+
+2. 觀察者模式
+   - 狀態變更事件
+   - 營運數據更新
+   - 遊客互動通知
+
+3. 狀態模式
+   - 設施狀態管理（OPERATIONAL, LOADING, RUNNING, MAINTENANCE, CLOSED）
+   - 運營流程控制
+   - 維護週期
+
+4. 隊列模式
+   - 排隊系統實現
+   - 容量管理
+   - 批次處理
+
 ## 主要系統組件
 
 ### Canvas 引擎
@@ -93,6 +137,44 @@ flowchart LR
     Actions --> Reducers
     Reducers --> Store
     Store --> Output
+```
+
+## 設施系統類圖
+
+```mermaid
+classDiagram
+    class FacilityConfig {
+        +id: string
+        +name: string
+        +position: Position
+        +capacity: number
+        +minDuration: number
+        +maxDuration: number
+        +maxQueueLength: number
+    }
+    
+    class Facility {
+        -config: FacilityConfig
+        -status: FacilityStatus
+        -stats: FacilityStats
+        -queue: string[]
+        +getId(): string
+        +getName(): string
+        +getPosition(): Position
+        +getStatus(): FacilityStatus
+        +canJoinQueue(): boolean
+        +joinQueue(visitorId: string): boolean
+        +startRide(): boolean
+        +startMaintenance(): boolean
+    }
+    
+    class EventListener {
+        <<interface>>
+        +handleEvent(event: FacilityEvent)
+    }
+    
+    Facility --> FacilityConfig
+    Facility --> EventListener
 ```
 
 ## 擴展性考慮

@@ -1,233 +1,213 @@
-# 技術背景與環境
+# 技術上下文
 
-## 技術棧選擇
+## 開發環境
+- Node.js 
+- TypeScript
+- React + Vite
+- Redux Toolkit
+- Jest + Cypress
 
-### 核心技術
-- **前端框架**: React 18.2
-- **狀態管理**: Redux Toolkit 2.2
-- **渲染引擎**: Canvas API
-- **版本控制**: Git
+## 系統實現
 
-### 開發工具
-- **IDE**: Visual Studio Code
-- **版本管理**: GitHub
-- **專案管理**: GitHub Projects
-- **文件管理**: Markdown
-- **建置工具**: Vite 5.4
-- **測試框架**:
-  - Jest 29.7 (單元測試)
-  - Testing Library (@testing-library/react, @testing-library/jest-dom)
-  - Cypress 13.6 (端到端測試)
+### 遊客系統
+- 使用 TypeScript 類別實現遊客行為
+- 狀態管理與轉換邏輯
+- 事件驅動的更新機制
+- 完整的單元測試覆蓋
 
-### 第三方框架
-- **UI Framework**: Material-UI (MUI) 5.15
-- **動畫**: GSAP 3.12
-- **樣式**: Emotion 11.11
-- **遊戲引擎**: Custom Canvas Engine
-- **路由**: React Router
+### 設施系統
+- 基於 TypeScript 的類別結構設計
+- 事件驅動架構
+  - 狀態變更事件
+  - 統計數據更新事件
+  - 遊客互動事件
+- 運營管理功能
+  - 排隊系統（FIFO 佇列）
+  - 容量管理
+  - 維護週期
+- 效能考量
+  - 使用事件委派優化事件處理
+  - 批次處理排隊更新
+  - 統計數據緩存
+- 測試策略
+  - Jest 單元測試
+  - 模擬時間控制
+  - 事件監聽驗證
+  - 邊界條件測試
 
-## 開發環境設置
+## 核心功能實現
 
-### 系統要求
-- **Node.js**: 20.12.0 或更高版本
-- **npm**: 10.0.0 或更高版本
-- **瀏覽器**: 支援最新版本的 Chrome/Firefox/Safari
+### 狀態管理
+```typescript
+// Redux store 配置
+import { configureStore } from '@reduxjs/toolkit';
+import visitorReducer from './visitorSlice';
+import facilityReducer from './facilitySlice';
 
-### 開發工具安裝
-1. Node.js 和 npm
-2. Visual Studio Code
-3. Git
-4. 瀏覽器開發者工具
+export const store = configureStore({
+  reducer: {
+    visitors: visitorReducer,
+    facilities: facilityReducer
+  }
+});
+```
 
-### 環境配置
-```json
-{
-  "node": ">=20.12.0",
-  "dependencies": {
-    "@emotion/react": "^11.11.3",
-    "@emotion/styled": "^11.11.0",
-    "@mui/material": "^5.15.11",
-    "@reduxjs/toolkit": "^2.2.1",
-    "gsap": "^3.12.5",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-redux": "^9.1.0"
-  },
-  "devDependencies": {
-    "@testing-library/react": "^14.2.1",
-    "@testing-library/jest-dom": "^6.4.2",
-    "@types/testing-library__jest-dom": "^5.14.9",
-    "@testing-library/cypress": "^10.0.1",
-    "cypress": "^13.6.6",
-    "typescript": "^5.2.2",
-    "vite": "^5.1.4",
-    "eslint": "^8.56.0"
+### 事件系統
+```typescript
+// 事件類型定義
+export type FacilityEvent = StatusChangeEvent | StatsUpdateEvent;
+
+// 事件處理介面
+export interface EventListener {
+  handleEvent(event: FacilityEvent): void;
+}
+```
+
+### 效能優化
+```typescript
+// 批次處理示例
+class QueueManager {
+  private updateQueue: QueueUpdate[] = [];
+  
+  public scheduleUpdate(update: QueueUpdate): void {
+    this.updateQueue.push(update);
+    this.processBatch();
+  }
+  
+  private processBatch(): void {
+    if (this.processTimeout) return;
+    
+    this.processTimeout = setTimeout(() => {
+      // 批次處理佇列更新
+      this.processQueue();
+      this.processTimeout = null;
+    }, 16); // 約60fps
   }
 }
 ```
 
-## 技術限制與考量
+## 開發工具
 
-### 效能目標
-- **FPS**: 60 (標準)
-- **初始載入時間**: <3秒
-- **互動響應時間**: <100ms
-- **記憶體使用**: <500MB
-
-### 平台支援
-1. 現代瀏覽器 (Chrome, Firefox, Safari, Edge)
-2. 行動裝置瀏覽器（響應式設計）
-3. PWA 支援
-
-### 技術債務追蹤
-- Canvas 渲染優化
-- 狀態管理最佳實踐
-- 組件重用性
-- 瀏覽器相容性
-
-## 開發規範
-
-### 程式碼規範
-- 使用 TypeScript 5.2 強型別
-- ESLint 8.56 + Prettier 程式碼格式化
-- React 最佳實踐指南
-- 單元測試覆蓋率 >80%
-
-### 測試規範
-- Jest 單元測試
-  - TypeScript 支援
-  - 狀態管理測試
-  - 組件測試
-  - 效能測試
-  - Testing Library 整合
-    - @testing-library/react 用於組件測試
-    - @testing-library/jest-dom 用於 DOM 斷言
-    - screen.getByText 與正則表達式支援
-    - style 屬性測試支援
-    - 動態樣式與動畫測試
-    - 行為預測系統測試
-      - 狀態預測測試
-      - 滿意度趨勢測試
-      - 時間預估測試
-      - 位置預測測試
-  - 自定義 TypeScript 配置 (tsconfig.test.json)
-    - 支援 JSX
-    - ESModule 相容性
-    - Jest 類型定義
-  - Redux Mock 支援
-    - useSelector hook 模擬
-    - 狀態變更測試
-    - 複雜狀態樹測試
-    - 預測資訊狀態測試
-- Cypress 端到端測試
-  - 自動化截圖測試
-  - 狀態管理測試
-  - Headless 測試支援
-
-### 資料結構與演算法
-```typescript
-// 路徑尋找演算法
-interface Vector2D {
-  x: number;
-  y: number;
-}
-
-interface PathNode {
-  position: Vector2D;
-  g: number;  // 起點到此節點的成本
-  h: number;  // 預估此節點到終點的成本
-  f: number;  // 總成本 (g + h)
-  parent: PathNode | null;
-}
-
-// 預測系統介面
-interface Prediction {
-  nextState: VisitorState;
-  nextPosition?: Vector2D;
-  satisfactionTrend: number;
-  timeToNextState: number;
-}
-
-// A* 演算法實現
-class PathFinder {
-  // 使用曼哈頓距離作為啟發函數
-  // 支援動態障礙物處理
-  // 可配置網格大小
-  // Catmull-Rom 曲線路徑平滑化
-  // 智能避障系統
-  // 路徑優化
-}
-
-// 路徑平滑化演算法
-- Catmull-Rom 曲線插值
-- 動態避障檢測
-- 路徑優化與簡化
-
-// 核心狀態介面
-interface GameState {
-  economy: Economy;
-  attractions: Attraction[];
-  visitors: Visitor[];
-  weather: Weather;
-}
-
-// Redux store 結構
-interface RootState {
-  game: GameState;
-  ui: UIState;
-  settings: SettingsState;
+### 編輯器配置
+```json
+{
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  }
 }
 ```
 
-### 演算法效能優化
-- 路徑快取機制
-- 動態障礙物處理
-- 路徑平滑化優化
-- 避障計算優化
-- 預測系統優化
-  - 狀態轉換計算優化
-  - 時間預估精確度提升
-  - 趨勢計算效能優化
+### ESLint 規則
+```json
+{
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:react-hooks/recommended"
+  ],
+  "rules": {
+    "@typescript-eslint/explicit-function-return-type": "error",
+    "@typescript-eslint/no-explicit-any": "error"
+  }
+}
+```
 
-### API 設計原則
-- 組件化設計
-- Props 類型定義
-- 狀態隔離
-- 效能監控
-- 預測系統設計
-  - 狀態預測介面
-  - 趨勢分析介面
-  - 時間估算介面
+## 測試配置
 
-## 前端架構
+### Jest 配置
+```typescript
+// jest.config.ts
+export default {
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1'
+  },
+  globals: {
+    'ts-jest': {
+      tsconfig: 'tsconfig.test.json'
+    }
+  }
+};
+```
 
-### 開發環境
-1. Vite 開發伺服器
-2. 熱重載
-3. 開發者工具
-4. 效能監控
+### 測試工具函數
+```typescript
+// test-utils.ts
+export const createMockFacility = (config: Partial<FacilityConfig>): Facility => {
+  return new Facility({
+    id: 'test-facility',
+    name: 'Test Facility',
+    position: { x: 0, y: 0 },
+    capacity: 30,
+    minDuration: 3,
+    maxDuration: 5,
+    maxQueueLength: 100,
+    ...config
+  });
+};
+```
 
-### 建置流程
-1. TypeScript 編譯
-2. 程式碼壓縮
-3. 資源優化
-4. 打包發布
+## CI/CD 配置
 
-## 監控與維護
+### GitHub Actions
+```yaml
+name: Test and Build
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+```
 
-### 監控指標
-- FPS 監控
-- 效能分析
+## 性能基準
+
+### 測試結果
+- 單元測試執行時間: <2s
+- 端到端測試執行時間: <30s
+- 程式碼覆蓋率: >80%
+- 記憶體使用峰值: <100MB
+
+### 效能目標
+- 遊戲迴圈更新: 60fps
+- UI 響應時間: <100ms
+- 最大同時遊客數: 1000
+- 最大同時設施數: 100
+
+## 依賴版本
+```json
+{
+  "dependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "@reduxjs/toolkit": "^1.9.0",
+    "typescript": "^4.9.0"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0",
+    "ts-jest": "^29.0.0",
+    "@testing-library/react": "^13.0.0",
+    "cypress": "^12.0.0"
+  }
+}
+```
+
+## 調試工具
+- Chrome DevTools
+- React DevTools
+- Redux DevTools
+- VS Code Debugger
+
+## 部署考慮
+- 靜態資源優化
+- 程式碼分割
+- 快取策略
 - 錯誤追蹤
-- 使用者行為
-- 測試覆蓋率
-- 預測準確度監控
-- 預測系統效能監控
-
-### 維護計畫
-- 定期更新依賴
-- 程式碼優化
-- 效能調校
-- 功能擴展
-- 自動化測試維護
-- 預測系統調校與優化
