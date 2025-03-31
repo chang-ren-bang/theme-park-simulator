@@ -7,6 +7,7 @@ import FacilityBuilderPanel from './components/ui/FacilityBuilderPanel';
 import { LoadingSpinner } from './components/shared/LoadingSpinner';
 import { ErrorMessage } from './components/shared/ErrorMessage';
 import { TransitionWrapper } from './components/shared/TransitionWrapper';
+import GameCanvas from './components/game/GameCanvas';
 import { Vector2D } from './utils/PathFinder';
 import { VisitorState } from './components/game/Visitor';
 import './App.css';
@@ -79,6 +80,9 @@ function App() {
             <div className="left-panels">
               <VisitorInfoPanel />
               <VisitorConfigPanel />
+            </div>
+            <div className="center-panel">
+              <GameCanvas width={800} height={600} />
             </div>
             <div className="right-panels">
               <FacilityBuilderPanel />
