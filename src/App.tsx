@@ -6,6 +6,7 @@ import { VisitorConfigPanel } from './components/ui/VisitorConfigPanel';
 import './App.css';
 import { Vector2D } from './utils/PathFinder';
 import { VisitorState } from './components/game/Visitor';
+import FacilityBuilderPanel from './components/ui/FacilityBuilderPanel';
 
 function App() {
   const dispatch = useAppDispatch();
@@ -41,9 +42,14 @@ function App() {
       >
         模擬選擇遊客
       </button>
-      <div style={{ display: 'flex', gap: '20px', padding: '20px' }}>
-        <VisitorInfoPanel />
-        <VisitorConfigPanel />
+      <div className="panels-container">
+        <div className="left-panels">
+          <VisitorInfoPanel />
+          <VisitorConfigPanel />
+        </div>
+        <div className="right-panels">
+          <FacilityBuilderPanel />
+        </div>
       </div>
     </div>
   );

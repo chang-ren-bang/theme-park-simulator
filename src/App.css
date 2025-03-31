@@ -1,42 +1,121 @@
 #root {
-  max-width: 1280px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  padding: 1rem;
+  text-align: left;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.app {
+  width: 100%;
+  min-height: 100vh;
+  background-color: #f5f5f5;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.panels-container {
+  display: flex;
+  gap: 2rem;
+  padding: 1rem;
+  margin-top: 4rem;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.left-panels {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.card {
-  padding: 2em;
+.right-panels {
+  flex: 2;
 }
 
-.read-the-docs {
-  color: #888;
+/* 面板共用樣式 */
+.facility-builder-panel,
+.visitor-info-panel,
+.visitor-config-panel {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+/* 表單元素樣式 */
+input, button {
+  padding: 0.5rem;
+  margin: 0.5rem 0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+button {
+  background-color: #4a90e2;
+  color: white;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.2s;
+}
+
+button:hover {
+  background-color: #357abd;
+}
+
+button.delete-btn {
+  background-color: #dc3545;
+}
+
+button.delete-btn:hover {
+  background-color: #c82333;
+}
+
+/* 設施列表樣式 */
+.facilities-list {
+  margin-top: 2rem;
+}
+
+.facilities-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.facility-item {
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.facility-item:hover {
+  border-color: #4a90e2;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.facility-item.selected {
+  border-color: #4a90e2;
+  background-color: #f8f9fa;
+}
+
+/* 編輯面板樣式 */
+.edit-panel {
+  margin-top: 2rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.cancel-btn {
+  background-color: #6c757d;
+}
+
+.cancel-btn:hover {
+  background-color: #5a6268;
 }
