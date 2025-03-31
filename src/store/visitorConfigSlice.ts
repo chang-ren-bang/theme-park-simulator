@@ -35,9 +35,9 @@ const initialState: VisitorConfigState = {
     queueingTimeLimit: 300
   },
   visitorParams: {
-    totalVisitors: 50,
-    spawnInterval: 2000,
-    moveSpeed: 2
+    totalVisitors: 20,
+    spawnInterval: 5000,
+    moveSpeed: 1
   }
 };
 

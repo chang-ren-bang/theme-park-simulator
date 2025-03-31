@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useAppSelector } from '../../hooks/useAppSelector';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
+import { buildFacility } from '../../store/facilitySlice';
 import { Facility } from './Facility';
 import type { IVisitor as VisitorInfo } from './Visitor';
 import { Visitor, VisitorState } from './Visitor';

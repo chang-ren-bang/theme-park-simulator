@@ -207,17 +207,16 @@ export const VisitorConfigPanel: React.FC = () => {
 
         .config-item {
           display: flex;
-          align-items: center;
-          margin-bottom: 0.8rem;
+          flex-direction: column;
+          margin-bottom: 1rem;
         }
 
         .config-item label {
-          flex: 1;
-          margin-right: 1rem;
+          margin-bottom: 0.5rem;
+          font-weight: 500;
         }
 
         .config-controls {
-          flex: 2;
           display: flex;
           gap: 1rem;
           align-items: center;
