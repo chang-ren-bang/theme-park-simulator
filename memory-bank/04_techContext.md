@@ -149,6 +149,63 @@ export const createMockFacility = (config: Partial<FacilityConfig>): Facility =>
     ...config
   });
 };
+
+export const createMockBuilder = (width: number = 10, height: number = 10): FacilityBuilder => {
+  return new FacilityBuilder(width, height);
+};
+
+export const createMockConfig = (override: Partial<Omit<FacilityConfig, 'id'>> = {}): Omit<FacilityConfig, 'id'> => {
+  return {
+    name: '測試設施',
+    position: { x: 5, y: 5 },
+    capacity: 30,
+    minDuration: 3,
+    maxDuration: 5,
+    maxQueueLength: 50,
+    ...override
+  };
+};
+```
+
+### 建造系統實作
+```typescript
+// 建造系統核心邏輯
+export class FacilityBuilder {
+  private facilities: Map<string, Facility>;
+  private mapWidth: number;
+  private mapHeight: number;
+
+  constructor(mapWidth: number, mapHeight: number) {
+    this.facilities = new Map();
+    this.mapWidth = mapWidth;
+    this.mapHeight = mapHeight;
+  }
+
+  // 驗證系統
+  private isValidPosition(position: Position): boolean {
+    return position.x >= 0 &&
+           position.x < this.mapWidth &&
+           position.y >= 0 &&
+           position.y < this.mapHeight;
+  }
+
+  private isOverlappingWithExisting(position: Position, excludeId?: string): boolean {
+    for (const [id, facility] of this.facilities.entries()) {
+      if (excludeId && id === excludeId) continue;
+      const facilityPos = facility.getPosition();
+      if (facilityPos.x === position.x && facilityPos.y === position.y) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // 建造與管理功能
+  public buildFacility(config: Omit<FacilityConfig, 'id'>): Facility | null;
+  public moveFacility(facilityId: string, newPosition: Position): boolean;
+  public updateCapacity(facilityId: string, newCapacity: number): boolean;
+  public getFacilities(): Map<string, Facility>;
+}
 ```
 
 ## CI/CD 配置

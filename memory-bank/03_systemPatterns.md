@@ -168,6 +168,20 @@ classDiagram
         +startMaintenance(): boolean
     }
     
+    class FacilityBuilder {
+        -facilities: Map<string, Facility>
+        -mapWidth: number
+        -mapHeight: number
+        +buildFacility(config: FacilityConfig): Facility
+        +moveFacility(id: string, pos: Position): boolean
+        +updateCapacity(id: string, capacity: number): boolean
+        +removeFacility(id: string): boolean
+        +getFacilities(): Map<string, Facility>
+        -isValidPosition(pos: Position): boolean
+        -isValidCapacity(capacity: number): boolean
+        -isOverlappingWithExisting(pos: Position): boolean
+    }
+    
     class EventListener {
         <<interface>>
         +handleEvent(event: FacilityEvent)
@@ -175,7 +189,14 @@ classDiagram
     
     Facility --> FacilityConfig
     Facility --> EventListener
+    FacilityBuilder --> Facility
 ```
+
+### 建造者模式
+- FacilityBuilder 負責設施的創建、驗證和管理
+- 提供完整的生命週期管理
+- 確保設施放置的有效性
+- 維護設施之間的空間關係
 
 ## 擴展性考慮
 
