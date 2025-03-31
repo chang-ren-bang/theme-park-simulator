@@ -1,54 +1,215 @@
-# React + TypeScript + Vite
+# 主題公園模擬器 (Theme Park Simulator)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+一個專注於遊樂設施建造和遊客行為模擬的主題公園模擬遊戲，提供深度的滿意度系統和真實的遊客行為模擬。
 
-Currently, two official plugins are available:
+## 專案願景
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+打造一個簡潔但深度的主題公園模擬器，通過：
+- 直觀的設施建造系統
+- 真實的遊客行為模擬
+- 合理的滿意度機制
+- 具挑戰性的遊戲體驗
 
-## Expanding the ESLint configuration
+## 核心功能
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### 遊客系統 (90% 完成)
+- ✅ 智能路徑尋找（A* 演算法）
+- ✅ 動態滿意度計算
+- ✅ 真實的遊客行為
+  - 基於滿意度的決策系統
+  - 智能路徑規劃
+  - 即時狀態更新
+- ✅ 視覺化狀態顯示
+  - 即時資訊面板
+  - 情緒指示器
+  - 行為預測
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+### 設施系統 (50% 完成)
+- ✅ 基礎建造功能
+  - 設施放置
+  - 位置編輯
+  - 容量設定
+- ✅ 運營管理
+  - 排隊系統
+  - 使用統計
+  - 效能監控
+
+### 使用者介面 (50% 完成)
+- ✅ 基礎佈局系統
+  - 左右分欄設計
+  - 響應式佈局
+- ✅ 建造工具介面
+  - 設施建造表單
+  - 設施列表顯示
+- 🚧 進階功能（開發中）
+  - 批量操作
+  - 篩選排序
+  - 數據視覺化
+  - 快捷鍵支援
+
+## 技術棧
+
+- 前端框架：React + TypeScript
+- 狀態管理：Redux Toolkit
+- 開發工具：Vite
+- 測試工具：Jest + Cypress
+- 代碼品質：ESLint + Prettier
+
+## 開發設置
+
+1. 安裝依賴
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+2. 啟動開發環境
+```bash
+npm run dev
 ```
+
+3. 執行測試
+```bash
+# 單元測試
+npm test
+
+# E2E 測試
+npm run cypress
+```
+
+4. 建置專案
+```bash
+npm run build
+```
+
+## 專案結構
+
+```
+theme-park-simulator/
+├── src/
+│   ├── components/     # React 組件
+│   │   ├── ui/        # UI 組件
+│   │   ├── game/      # 遊戲組件
+│   │   └── shared/    # 共用組件
+│   ├── store/         # Redux 狀態管理
+│   ├── hooks/         # 自定義 Hooks
+│   ├── utils/         # 工具函數
+│   └── engine/        # Canvas 引擎
+├── public/            # 靜態資源
+└── tests/            # 測試文件
+```
+
+## 效能指標
+
+- 動畫更新：60fps
+- 互動響應：<100ms
+- 測試覆蓋：
+  - 端到端測試：100%
+  - 單元測試：70%
+  - 組件測試：45%
+  - 整合測試：25%
+
+## 版本規劃
+
+### v0.1 (已完成)
+- ✅ 基礎滿意度系統
+- ✅ 遊客 AI 實現
+- ✅ 遊客狀態顯示
+- ✅ 基本建造功能
+
+### v0.2 (開發中)
+- ✅ 完整行為決策
+- ✅ 進階建造工具
+- 🚧 詳細資訊面板
+- 🚧 批量操作功能
+
+### v0.3 (計劃中)
+- 效能優化
+- 介面美化
+- 遊戲平衡
+
+## LLM 服務使用經驗
+
+在使用 Cline 搭配 Memory Bank 進行開發時，我們遇到了各種 LLM 服務的限制：
+
+### VSCode LM API (Claude 3.5)
+- 最常用的解決方案
+- 頻繁遇到 rate limit exceed 問題
+- 大量程式碼除錯時容易耗盡 token
+- 遇到限制時只能等待額度恢復
+
+### Ollama Local Models
+- 與 Cline（基於 Claude 3.5/3.7）的開發流程不相容
+- 常見問題：
+  - 無法正確識別應使用的工具
+  - 生成重複的程式碼
+  - 不理解 Memory Bank 機制
+  - 對話中出現重複的問答模式
+
+### AWS Bedrock (Claude)
+- 費用成本高
+- 個人帳號的額度限制難以調整
+- 各項服務限制較多
+
+### 最終解決方案
+主要依賴 VSCode LM API：
+- 優點：穩定且可靠
+- 缺點：需要管理使用額度
+- 策略：遇到限制時暫停開發，等待額度恢復
+
+## 開發方法論演進
+
+### 3/28 開發方式與成果
+- 高度依賴 Memory Bank 機制
+- 每次 commit 後使用固定 prompt 請 Cline 提供「下一步規劃與執行」
+- 專注於通過單元測試，但缺乏視覺化成果
+- 開發進度快速但難以向利害關係人展示
+
+完成的功能：
+1. 路徑尋找系統
+   - A* 演算法實現
+   - 障礙物處理
+   - 效能優化
+   - 完整單元測試
+2. 滿意度系統
+   - SatisfactionManager 類別實現
+   - 動態調整機制
+   - 狀態更新優化
+3. 遊客行為系統
+   - Visitor 類別與狀態管理
+   - 決策系統整合
+   - 效能優化
+   - 測試覆蓋
+
+### 3/31 開發方式與成果
+- 優先設計使用者介面
+- 由開發者主導 prompt 方向，專注於可視化進展
+- 更容易展示開發成果
+- 利害關係人可以直接體驗並提供反饋
+
+完成的功能：
+1. 使用者介面基礎架構
+   - 左右分欄設計
+   - 響應式佈局
+   - 面板組織結構
+2. 建造工具介面
+   - 設施建造表單
+   - 設施列表顯示
+   - 編輯與刪除功能
+3. 視覺化功能
+   - 即時資訊面板
+   - 狀態指示器
+   - 滿意度顯示
+
+### 方法論比較
+| 面向 | 3/28 方式 | 3/31 方式 |
+|------|-----------|-----------|
+| 開發速度 | 快 | 中等 |
+| 程式品質 | 高（單元測試驅動）| 中等 |
+| 可展示性 | 低 | 高 |
+| 反饋週期 | 長 | 短 |
+| 溝通成本 | 高 | 低 |
+
+
+## 開發團隊
+
+此專案由熱愛遊戲開發的工程師團隊開發，致力於創造獨特的主題公園模擬體驗。
