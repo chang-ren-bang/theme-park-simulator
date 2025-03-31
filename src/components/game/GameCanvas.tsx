@@ -1,10 +1,12 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useAppSelector } from '../../hooks/useAppSelector';
+import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { Facility } from './Facility';
 import type { IVisitor as VisitorInfo } from './Visitor';
-import { VisitorState } from './Visitor';
+import { Visitor, VisitorState } from './Visitor';
 import { FacilityStatus } from './types/FacilityTypes';
 import { selectVisitorParams } from '../../store/visitorConfigSlice';
+import { updateVisitor } from '../../store/visitorSlice';
 
 interface GameCanvasProps {
   width?: number;
@@ -16,14 +18,51 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
   height = 600 
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const dispatch = useAppDispatch();
   const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
+  const [visitorCount, setVisitorCount] = useState(0);
   
   const facilitiesMap = useAppSelector(state => state.facilities.facilities);
   const visitorsMap = useAppSelector(state => state.visitors.visitors);
   const visitorParams = useAppSelector(selectVisitorParams);
 
-  // 轉換為陣列以便渲染
-  const facilities = Object.values(facilitiesMap);
+  // 建立遊客生成函數
+  const spawnVisitor = useCallback(() => {
+    if (visitorCount >= visitorParams.totalVisitors) return;
+
+    // 在地圖邊緣隨機生成遊客
+    const spawnPoints = [
+      { x: 0, y: Math.floor(Math.random() * 15) },
+      { x: 19, y: Math.floor(Math.random() * 15) },
+      { x: Math.floor(Math.random() * 20), y: 0 },
+      { x: Math.floor(Math.random() * 20), y: 14 }
+    ];
+    
+    const spawnPoint = spawnPoints[Math.floor(Math.random() * spawnPoints.length)];
+    const newVisitor = new Visitor(
+      `visitor_${Date.now()}`,
+      spawnPoint,
+      Object.values(facilitiesMap).map(f => f.getPosition()),
+      visitorParams.moveSpeed
+    );
+
+    dispatch(updateVisitor({
+      id: newVisitor.id,
+      position: newVisitor.position,
+      state: newVisitor.state,
+      satisfaction: newVisitor.satisfaction,
+      lowSatisfactionCount: 0
+    }));
+
+    setVisitorCount(prev => prev + 1);
+  }, [dispatch, visitorCount, visitorParams.totalVisitors, visitorParams.moveSpeed, facilitiesMap]);
+
+  // 設置遊客生成定時器
+  useEffect(() => {
+    const spawnTimer = setInterval(spawnVisitor, visitorParams.spawnInterval);
+    return () => clearInterval(spawnTimer);
+  }, [spawnVisitor, visitorParams.spawnInterval]);
+
   const visitors = Object.values(visitorsMap);
 
   useEffect(() => {
@@ -64,7 +103,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
       drawGrid(context, width, height);
       
       // 繪製設施
-      facilities.forEach(facility => {
+      Object.values(facilitiesMap).forEach(facility => {
         drawFacility(context, facility);
       });
 
@@ -93,7 +132,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, [context, facilities, visitors, width, height, visitorParams]);
+  }, [context, facilitiesMap, visitors, width, height, visitorParams]);
 
   const drawGrid = (
     ctx: CanvasRenderingContext2D, 
