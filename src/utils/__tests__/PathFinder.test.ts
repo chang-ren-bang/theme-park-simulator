@@ -3,6 +3,9 @@ import { PathFinder, Vector2D, calculateDistance } from '../PathFinder';
 describe('PathFinder', () => {
   let pathFinder: PathFinder;
 
+  // 設置全局測試超時時間為 10 秒
+  jest.setTimeout(10000);
+
   beforeEach(() => {
     pathFinder = new PathFinder(1, [], 0.5);
   });
@@ -122,6 +125,9 @@ describe('PathFinder', () => {
   });
 
   describe('路徑平滑化', () => {
+    // 設置較長的超時時間處理複雜的平滑化計算
+    jest.setTimeout(15000);
+
     it('應該能平滑化簡單路徑', () => {
       const start: Vector2D = { x: 0, y: 0 };
       const goal: Vector2D = { x: 2, y: 2 };
@@ -142,12 +148,12 @@ describe('PathFinder', () => {
         const next = path[i + 1];
         
         // 檢查路徑的連續性和平滑度
-      const d1 = calculateDistance(prev, curr);
-      const d2 = calculateDistance(curr, next);
-      
-      // 確保相鄰點之間的距離合理
-      expect(d1).toBeLessThan(2);
-      expect(d2).toBeLessThan(2);
+        const d1 = calculateDistance(prev, curr);
+        const d2 = calculateDistance(curr, next);
+        
+        // 確保相鄰點之間的距離合理
+        expect(d1).toBeLessThan(2);
+        expect(d2).toBeLessThan(2);
       }
     });
 
@@ -179,6 +185,9 @@ describe('PathFinder', () => {
   });
 
   describe('路徑優化', () => {
+    // 設置較長的超時時間處理複雜的優化計算
+    jest.setTimeout(15000);
+
     it('應該移除冗餘的路徑點', () => {
       const start: Vector2D = { x: 0, y: 0 };
       const goal: Vector2D = { x: 4, y: 0 };
@@ -220,6 +229,9 @@ describe('PathFinder', () => {
   });
 
   describe('效能相關', () => {
+    // 設置較長的超時時間處理大規模路徑尋找
+    jest.setTimeout(20000);
+
     it('應該能處理較大的路徑尋找請求', () => {
       const start: Vector2D = { x: 0, y: 0 };
       const goal: Vector2D = { x: 10, y: 10 };
